@@ -475,6 +475,38 @@ def main():
       L.append(f"| {k} | {v:.1f} |")
     L.append("")
 
+  # ---- exploratory (NOT pre-registered): who sets the number when nobody disagrees
+  L.append("## Exploratory, not pre-registered: opener-set cycles\n")
+  L.append("Most cycles are uncontested because later speakers repeat the first proposal, so the "
+           "pre-registered credit metric is silent on them. Here a cycle is *opener-set* when every "
+           "first-turn proposal equals the opener's AND the median of the other agents' collected "
+           "harvests is within ±1 of it. *Target-set* = opener-set with the target as opener. "
+           "Chance target-set share (random order) ≈ opener-set share / 5.\n")
+  L.append("| Arm | Cycles | Unanimous echo | Opener-set | Target opened | Target-set |")
+  L.append("|---|---|---|---|---|---|")
+  for arm in sorted(by_arm):
+    n = echo = oset = topen = tset = 0
+    for r, _ in by_arm[arm]:
+      for c in r["cycles"].values():
+        if c["harvest"] is None:
+          continue
+        p = first_turn_proposals(c)
+        if len(p) < 2:
+          continue
+        n += 1
+        opener, v0 = p[0]
+        is_t = opener == r["target"]
+        topen += is_t
+        if all(v == v0 for _, v in p):
+          echo += 1
+          others = [v for nm, v in c["harvest"]["collected"].items() if nm != opener]
+          if others and abs(statistics.median(others) - v0) <= 1:
+            oset += 1
+            tset += is_t
+    L.append(f"| {arm} | {n} | {fmt(echo / n if n else None)} | {fmt(oset / n if n else None)} | "
+             f"{topen} | {tset} ({fmt(tset / n if n else None)}) |")
+  L.append("")
+
   L.append("## Interview tallies by arm\n")
   for arm, v in sorted(by_arm.items()):
     tal = collections.Counter()
