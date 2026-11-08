@@ -124,6 +124,10 @@ class Run:
       m = re.search(r"Answer\W*\s*(\d+)", txt)
       if m:
         return min(int(m.group(1)), self.stock), txt, False
+      tail = re.findall(r"(\d+)\s*tons", txt[-300:])  # no "Answer:" line: last "N tons" at the end
+      if tail:
+        self.log["flags"].append(f"month {month}: {a.name} gave no 'Answer:' line; used last 'N tons'")
+        return min(int(tail[-1]), self.stock), txt, False
     self.log["flags"].append(f"month {month}: harvest parse failure for {a.name}; recorded 0")
     return 0, txt, True
 
