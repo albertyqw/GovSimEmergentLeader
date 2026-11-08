@@ -50,7 +50,7 @@ prompt, moderator catch report, outsider persona verbatim).
 - **Arm 2 timing (user-approved):** the replaced agent fishes in month 3 and leaves; the
   newcomer takes its place in the month-3 discussion (announced: "joined us and fishes
   here from next month") and fishes from month 4 with no memory of months 1-3 beyond that
-  discussion. As specified, the newcomer took all 75 tons on its first harvest.
+  discussion. Under the original timing (arrive and fish in month 4) the smoke-test newcomer took all 75 tons on its first harvest.
 - **Harvest parse fallback:** no "Answer:" line → last "N tons" in the reply (flagged).
 - **API:** 120 s request timeout; patient retries on 429/overload; Mac kept awake.
 - **Analysis:** proposals are labelled per_person / group_total; totals are divided by
