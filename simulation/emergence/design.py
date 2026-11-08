@@ -70,6 +70,10 @@ class Design:
     self.base_orders = [[int(x) for x in o1.permutation(N)] for _ in range(MONTHS)]
     self.rest_orders = [[[int(x) for x in o2.permutation(N)] for _ in range(MAX_TURNS)]
                         for _ in range(MONTHS)]
+    # pre-season discussion (month 0) has its own draws, so months 1-12 keep theirs
+    p1, p2 = stream(seed, "order_pre"), stream(seed, "order_rest_pre")
+    self.pre_order = [int(x) for x in p1.permutation(N)]
+    self.pre_rest = [[int(x) for x in p2.permutation(N)] for _ in range(MAX_TURNS)]
     self.prosocial_seat = int(stream(seed, "prosocial").integers(N))
     others = [s for s in range(N) if s != self.prosocial_seat]
     self.newcomer_seat = int(stream(seed, "newcomer").choice(others))
@@ -92,12 +96,21 @@ class Design:
       for t in self.roster:
         if t["seat"] == self.newcomer_seat:
           t["end"] = 3
+          t["disc_end"] = 2  # fishes in month 3, but the newcomer takes the month-3 discussion
       self.roster.append({"name": next(spare), "seat": self.newcomer_seat, "start": 4,
-                          "end": MONTHS, "persona": "outsider"})
+                          "end": MONTHS, "persona": "outsider", "disc_start": 3})
 
   def tenant(self, seat, month):
     for t in self.roster:
       if t["seat"] == seat and t["start"] <= month <= t["end"]:
+        return t
+    raise KeyError((seat, month))
+
+  def discussant(self, seat, month):
+    """Tenant in this seat's discussion slot (month 0 = pre-season, same as month 1)."""
+    m = max(month, 1)
+    for t in self.roster:
+      if t["seat"] == seat and t.get("disc_start", t["start"]) <= m <= t.get("disc_end", t["end"]):
         return t
     raise KeyError((seat, month))
 
@@ -111,17 +124,19 @@ class Design:
       return self.fixed_opener_seat
     if self.arm == "3b":
       return (self.rotate_offset + month - 1) % N
-    return self.base_orders[month - 1][0]
+    return self.pre_order[0] if month == 0 else self.base_orders[month - 1][0]
 
   def speaking_order(self, month):
     """Seats for up to MAX_TURNS turns: opener, then the other four in random order, then
     further random passes (no back-to-back repeats)."""
     op = self.opener_seat(month)
-    first = [op] + [s for s in self.base_orders[month - 1] if s != op]
+    base = self.pre_order if month == 0 else self.base_orders[month - 1]
+    rest = self.pre_rest if month == 0 else self.rest_orders[month - 1]
+    first = [op] + [s for s in base if s != op]
     seq = list(first)
     k = 0
     while len(seq) < MAX_TURNS:
-      p = self.rest_orders[month - 1][k]
+      p = rest[k]
       k += 1
       if p[0] == seq[-1]:
         p = p[1:] + p[:1]
@@ -134,4 +149,4 @@ class Design:
             "prosocial": self.initial_names[self.prosocial_seat] if self.arm in ("1", "2") else None,
             "replaced_by_newcomer": self.initial_names[self.newcomer_seat] if self.arm == "2" else None,
             "fixed_opener": self.initial_names[self.fixed_opener_seat] if self.arm == "3a" else None,
-            "openers": [self.opener_seat(m) for m in range(1, MONTHS + 1)]}
+            "openers": [self.opener_seat(m) for m in range(0, MONTHS + 1)]}

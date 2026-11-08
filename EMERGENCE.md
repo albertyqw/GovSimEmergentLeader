@@ -41,3 +41,18 @@ prompt, moderator catch report, outsider persona verbatim).
   full (non-expired) memory, three separate calls, not fed back.
 - **Arm 2:** the newcomer's arrival and the leaver's departure are announced in the
   moderator report, as in the rotation arms.
+- **Pre-season discussion (user-approved after smoke tests):** every arm opens with a
+  month-0 discussion before the first harvest ("Welcome to the start of the fishing
+  season…"), opener set by the arm (3a fixed agent; 3b rotation includes it; others
+  random from separate draws, so months 1-12 keep their draws). Reason: month-1 requests
+  ranged 45-97 tons; arm 3a (identical to baseline in month 1) collapsed before any talk.
+  Its proposals are adopted against the month-1 harvest.
+- **Arm 2 timing (user-approved):** the replaced agent fishes in month 3 and leaves; the
+  newcomer takes its place in the month-3 discussion (announced: "joined us and fishes
+  here from next month") and fishes from month 4 with no memory of months 1-3 beyond that
+  discussion. As specified, the newcomer took all 75 tons on its first harvest.
+- **Harvest parse fallback:** no "Answer:" line → last "N tons" in the reply (flagged).
+- **API:** 120 s request timeout; patient retries on 429/overload; Mac kept awake.
+- **Analysis:** proposals are labelled per_person / group_total; totals are divided by
+  the number present. Credit per spec (first proposer that month) plus an `originator`
+  column (first proposer of that number anywhere in the run).

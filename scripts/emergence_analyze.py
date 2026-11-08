@@ -88,11 +88,13 @@ def originators(months):
   return first
 
 
-def adoption(months):
+def adoption(months, all_months):
+  """months: those with a discussion; all_months: every logged month (for next harvests)."""
+  by_no = {m["month"]: m for m in all_months if m.get("harvest_requested")}
   rows = []
-  for i, m in enumerate(months):
+  for m in months:
     props = proposals_clean(m)
-    nxt = months[i + 1] if i + 1 < len(months) else None
+    nxt = by_no.get(m["month"] + 1)
     row = {"month": m["month"], "n_proposals": len(props), "distinct": len({p for _, _, p in props}),
            "spread": (max(p for *_, p in props) - min(p for *_, p in props)) if props else None,
            "adoptable": bool(nxt and props), "adopted_number": None, "adopted_proposer": None,
@@ -136,7 +138,7 @@ def analyse(path):
   cfg, months = run["config"], run["months"]
   names = [t["name"] for t in run["design"]["roster"]]
   disc = [m for m in months if m.get("utterances")]
-  ad = adoption(disc)
+  ad = adoption(disc, months)
   adoptable = [r for r in ad if r["adoptable"]]
   adopted = [r for r in ad if r["adopted_proposer"]]
   cnt = collections.Counter(r["adopted_proposer"] for r in adopted)
@@ -154,11 +156,11 @@ def analyse(path):
     monthly.append({"month": m["month"], "gini_indegree": gini(list(indeg.values())),
                     "top_indegree": max(indeg, key=indeg.get) if any(indeg.values()) else None,
                     "top_pagerank": max(pr, key=pr.get), "indegree": indeg, "pagerank": pr})
-  ever = sorted({n for m in months for n in m["present"]})
+  ever = sorted({n for m in months for n in m["present"] + m.get("fishers", [])})
   indeg_run = {n: sum(w for (a, b), w in run_edges.items() if b == n) for n in ever}
   pr_run = pagerank(run_edges, ever)
   # efficiency
-  total = sum(sum(m["harvest"].values()) for m in months)
+  total = sum(sum(m.get("harvest", {}).values()) for m in months)
   oracle = sum(100 - 100 / r for r in run["design"]["regen"][:cfg["months"]])
   sp = special_agents(run)
   row = {"arm": cfg["arm"], "seed": cfg["seed"], "months_survived": run["end"]["months_survived"],

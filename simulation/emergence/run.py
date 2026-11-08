@@ -7,6 +7,7 @@ regrowth. Collapse (stock after fishing < 5) ends the run. Final interviews at t
 """
 import argparse
 import asyncio
+import collections
 import datetime as dt
 import json
 import os
@@ -39,6 +40,9 @@ class Agent:
   def __init__(self, tenant, base):
     self.name, self.seat, self.persona = tenant["name"], tenant["seat"], tenant["persona"]
     self.start, self.end = tenant["start"], tenant["end"]
+    self.disc_start = tenant.get("disc_start", tenant["start"])
+    self.disc_end = tenant.get("disc_end", tenant["end"])
+    self.interviewed = False
     self.mem = Memory(os.path.join(base, "memories", self.name))
     self.income = 0
 
@@ -84,7 +88,8 @@ class Run:
     if self.d.public_roster():
       lines = [f"{t['name']}: months {t['start']}-{t['end']}"
                for t in sorted(self.d.roster, key=lambda t: (t["seat"], t["start"]))]
-      text += (f"\n\nThis is month {month}. Fishing roster (public, everyone sees it): "
+      when = "the start of the season, before month 1" if month == 0 else f"month {month}"
+      text += (f"\n\nThis is {when}. Fishing roster (public, everyone sees it): "
                + "; ".join(lines) + f". You will fish here until month {a.end}. Only the fish you"
                " catch during your tenure count as your income.")
     return text + "\n"
@@ -147,8 +152,9 @@ class Run:
     end = re.search(r"Conversation conclusion by me:\s*\**\s*(yes|no)", txt, re.I)
     return utt, bool(end and end.group(1).lower() == "yes")
 
-  async def reflect(self, a, month, transcript):
-    now = month_date(month, 25, self.tick())
+  async def reflect(self, a, month, transcript, day=15):
+    rday = 1 if month == 0 else 25
+    now = month_date(max(month, 1), rday, self.tick())
     mems = self.retrieve(a, month, now, "reflection")
     prompt = (self.system(a, month) + f"Location: home\nDate: {now.strftime('%Y-%m-%d')}\n\n"
               + memory_prompt(a.name, mems) + "\nThis month's conversation:\n" + transcript + "\n"
@@ -162,7 +168,7 @@ class Run:
       if m:
         out.append((m.group(1).strip(), float(min(10, max(1, int(m.group(2)))))))
     for text, imp in out[:3]:
-      a.mem.add(month_date(month, 25, self.tick()), "reflection", text, imp)
+      a.mem.add(month_date(max(month, 1), rday, self.tick()), "reflection", text, imp)
     a.mem.rewrite_md()
     return txt
 
@@ -211,31 +217,83 @@ class Run:
                                    "n_memories": len(mems), "answers": ans})
 
   # ------------------------------------------------------------ main loop
-  def present(self, month):
-    out = []
-    for seat in range(N):
-      t = self.d.tenant(seat, month)
-      if t["name"] not in self.agents:
-        self.agents[t["name"]] = Agent(t, self.out)
-      out.append(self.agents[t["name"]])
-    return out
+  def _agent(self, t):
+    if t["name"] not in self.agents:
+      self.agents[t["name"]] = Agent(t, self.out)
+    return self.agents[t["name"]]
+
+  def fishers(self, month):
+    """Agents who fish in this month, by seat."""
+    return [self._agent(self.d.tenant(s, month)) for s in range(N)]
+
+  def talkers(self, month):
+    """Agents in this month's discussion, by seat (month 0 = pre-season)."""
+    return [self._agent(self.d.discussant(s, month)) for s in range(N)]
+
+  async def discuss(self, month, talkers, report, day):
+    names = [a.name for a in talkers]
+    convo = [("Moderator", report)]
+    order = [talkers[s] for s in self.d.speaking_order(month)]
+    utts, spoken = [], set()
+    for turn, a in enumerate(order, start=1):
+      now = month_date(max(month, 1), day, self.tick())
+      u, ended = await self.utter(a, month, names, convo, now)
+      convo.append((a.name, u))
+      spoken.add(a.name)
+      utts.append({"turn": turn, "speaker": a.name, "text": u, "concluded": ended, "nominee": None})
+      if ended and len(spoken) == len(talkers):
+        break
+    self.cur.update({"utterances": utts, "moderator_report": report, "opener": order[0].name,
+                     "discussants": names})
+    transcript = "".join(f"-{s}: {u}\n" for s, u in convo)
+    new = {a.name: [] for a in talkers}
+    for a in talkers:
+      for s, u in convo[1:]:
+        txt = f"{s} said: {u}" if s != a.name else f"I said: {u}"
+        new[a.name].append(a.mem.add(month_date(max(month, 1), day, self.tick()), "chat", txt, 5))
+    props, *_ = await asyncio.gather(self.extract(month, convo),
+                                     *(self.rate(a, new[a.name], month) for a in talkers))
+    self.cur["proposals"] = props
+    self.cur["reflections"] = dict(zip(names, await asyncio.gather(
+        *(self.reflect(a, month, transcript, day) for a in talkers))))
+
+  async def interview_leavers(self, month):
+    """Tenants whose last activity (fishing or discussion) is this month, before the last month."""
+    if month >= self.months:
+      return
+    leaving = [a for a in self.agents.values() if max(a.end, a.disc_end) == month and not a.interviewed]
+    for a in leaving:
+      a.interviewed = True
+    await asyncio.gather(*(self.interview(a, month, "departure") for a in leaving))
 
   async def run(self):
     collapsed = False
+    # pre-season discussion (month 0): before the first harvest, opener set by the arm
+    talk = self.talkers(0)
+    self.cur = {"month": 0, "stock_start": self.stock, "present": [a.name for a in talk],
+                "fishers": [], "arrived": [], "left": [], "retrievals": []}
+    t0 = month_date(1, 1, self.tick())
+    for a in talk:
+      a.mem.add(t0, "event", f"Before everyone fishes, there are {self.stock} tons of fish in the lake.",
+                10, always=True, expires=month_date(2))
+    await self.discuss(0, talk, "Welcome to the start of the fishing season. There are"
+                       f" {self.stock} tons of fish in the lake. Nobody has fished yet; this is a chance"
+                       " to talk before the first month of fishing.", 1)
+    self.log["months"].append(self.cur)
+    self.save()
+    prev_talk = [a.name for a in talk]
     for month in range(1, self.months + 1):
-      present = self.present(month)
-      names = [a.name for a in present]
-      prev = set(self.log["months"][-1]["present"]) if self.log["months"] else set(names)
-      arrived = [n for n in names if n not in prev]
-      left = [n for n in prev if n not in names]
+      fish = self.fishers(month)
+      names = [a.name for a in fish]
       rho = self.d.regen[month - 1]
-      self.cur = {"month": month, "stock_start": self.stock, "regen": rho, "present": names,
-                  "arrived": arrived, "left": left, "retrievals": []}
+      self.cur = {"month": month, "stock_start": self.stock, "regen": rho, "fishers": names,
+                  "present": names, "retrievals": []}
       # observations (always included, expire next month)
       t0 = month_date(month, 1, self.tick())
-      for a in present:
-        a.mem.add(t0, "event", f"Before everyone fishes, there are {self.stock} tons of fish in the lake.",
-                  10, always=True, expires=month_date(month + 1))
+      for a in fish:
+        if month > 1:
+          a.mem.add(t0, "event", f"Before everyone fishes, there are {self.stock} tons of fish in the lake.",
+                    10, always=True, expires=month_date(month + 1))
         if a.persona == "prosocial":
           f = universalization_f(self.stock)
           self.cur["universalization_F"] = f
@@ -243,8 +301,8 @@ class Run:
                     " the lake population will shrink next month.", 10, always=True,
                     expires=month_date(month + 1))
       # harvest
-      res = await asyncio.gather(*(self.harvest_one(a, month) for a in present))
-      wanted = {a.name: r[0] for a, r in zip(present, res)}
+      res = await asyncio.gather(*(self.harvest_one(a, month) for a in fish))
+      wanted = {a.name: r[0] for a, r in zip(fish, res)}
       total = sum(wanted.values())
       if total > self.stock:  # proportional allocation, largest remainders
         raw = {n: w * self.stock / total for n, w in wanted.items()}
@@ -254,70 +312,54 @@ class Run:
         self.log["flags"].append(f"month {month}: requests {total} exceeded stock {self.stock}; prorated")
       else:
         got = dict(wanted)
-      for a in present:
+      for a in fish:
         a.income += got[a.name]
       remaining = self.stock - sum(got.values())
       self.cur.update({"harvest_requested": wanted, "harvest": got,
-                       "harvest_reasoning": {a.name: r[1] for a, r in zip(present, res)},
-                       "harvest_parse_failed": [a.name for a, r in zip(present, res) if r[2]],
+                       "harvest_reasoning": {a.name: r[1] for a, r in zip(fish, res)},
+                       "harvest_parse_failed": [a.name for a, r in zip(fish, res) if r[2]],
                        "stock_after_harvest": remaining,
                        "sustainable_total": N * psi(self.stock, rho),
                        "sustainable_per_agent": psi(self.stock, rho)})
-      # memory: own catch + revealed catches (dated at the discussion)
-      new = {a.name: [] for a in present}
+      talk = self.talkers(month) if remaining >= COLLAPSE else fish
+      tnames = [a.name for a in talk]
+      # memory: own catch (fishers) + revealed catches (everyone at the discussion)
+      new = collections.defaultdict(list)
       tday = month_date(month, 15, self.tick())
-      for a in present:
+      for a in fish:
         new[a.name].append(a.mem.add(month_date(month, 1, self.tick()), "action",
                                      f"I caught {got[a.name]} tons of fish.", 5))
-        for b in present:
-          if b is not a:
-            new[a.name].append(a.mem.add(tday, "event", f"{b.name} caught {got[b.name]} tons of fish.", 5))
-      await asyncio.gather(*(self.rate(a, new[a.name], month) for a in present))
+      for a in talk:
+        for n in names:
+          if n != a.name:
+            new[a.name].append(a.mem.add(tday, "event", f"{n} caught {got[n]} tons of fish.", 5))
+      who = {a.name: a for a in fish + talk}
+      await asyncio.gather(*(self.rate(who[n], es, month) for n, es in new.items()))
       if remaining < COLLAPSE:
         collapsed = True
         self.cur["collapsed"] = True
         self.log["months"].append(self.cur)
         break
-      # discussion
+      # discussion (roster changes announced by the moderator)
+      left = [n for n in prev_talk if n not in tnames]
+      arrived = [n for n in tnames if n not in prev_talk]
+      self.cur.update({"present": tnames, "arrived": arrived, "left": left})
       report = ("Ladies and gentlemen, let me give you the monthly fishing report. "
                 + " ".join(f"{n} caught {got[n]} tons of fish." for n in names))
-      if left or arrived:
-        report += "".join(f" {n} has left the lake." for n in left)
-        report += "".join(f" {n} has joined us and fishes here from this month." for n in arrived)
-      convo = [("Moderator", report)]
-      order = [present[s] for s in self.d.speaking_order(month)]
-      utts, spoken = [], set()
-      for turn, a in enumerate(order, start=1):
-        now = month_date(month, 15, self.tick())
-        u, ended = await self.utter(a, month, names, convo, now)
-        convo.append((a.name, u))
-        spoken.add(a.name)
-        utts.append({"turn": turn, "speaker": a.name, "text": u, "concluded": ended, "nominee": None})
-        if ended and len(spoken) == len(present):
-          break
-      self.cur.update({"utterances": utts, "moderator_report": report,
-                       "opener": order[0].name})
-      transcript = "".join(f"-{s}: {u}\n" for s, u in convo)
-      new = {a.name: [] for a in present}
-      for a in present:
-        for i, (s, u) in enumerate(convo[1:]):
-          txt = f"{s} said: {u}" if s != a.name else f"I said: {u}"
-          new[a.name].append(a.mem.add(month_date(month, 15, self.tick()), "chat", txt, 5))
-      ext = asyncio.gather(self.extract(month, convo),
-                           *(self.rate(a, new[a.name], month) for a in present))
-      props, *_ = await ext
-      self.cur["proposals"] = props
-      self.cur["reflections"] = dict(zip(names, await asyncio.gather(
-          *(self.reflect(a, month, transcript) for a in present))))
-      leaving = [a for a in present if a.end == month and month < self.months]
-      if leaving:
-        await asyncio.gather(*(self.interview(a, month, "departure") for a in leaving))
+      report += "".join(f" {n} has left the lake." for n in left)
+      for n in arrived:
+        when = "from this month" if self.agents[n].start <= month else "from next month"
+        report += f" {n} has joined us and fishes here {when}."
+      await self.discuss(month, talk, report, 15)
+      prev_talk = tnames
+      await self.interview_leavers(month)
       self.stock = min(CAPACITY, int(remaining * rho))
       self.cur["stock_end"] = self.stock
       self.log["months"].append(self.cur)
       self.save()
     last = self.log["months"][-1]["month"]
-    final = [self.agents[n] for n in self.log["months"][-1]["present"]]
+    final = [a for a in self.agents.values() if not a.interviewed and
+             (a.start <= last <= a.end or a.disc_start <= last <= a.disc_end)]
     await asyncio.gather(*(self.interview(a, last, "end") for a in final))
     self.log["end"] = {"collapsed": collapsed, "months_survived": last - (1 if collapsed else 0),
                        "last_month": last, "final_stock": self.stock,
