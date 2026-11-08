@@ -178,13 +178,14 @@ class Run:
               " Output [] if there are none.")
     for attempt in range(2):
       txt = await llm.ask(prompt, 4000, "extract")
-      m = re.search(r"\[.*\]", txt, re.S)
-      try:
-        props = json.loads(m.group(0)) if m else None
-        if isinstance(props, list):
-          return [p for p in props if isinstance(p, dict) and isinstance(p.get("number"), (int, float))]
-      except json.JSONDecodeError:
-        pass
+      # first JSON list in the reply, tolerating prose or code fences around it
+      for i in [k for k, ch in enumerate(txt) if ch == "["][:5]:
+        try:
+          props, _ = json.JSONDecoder().raw_decode(txt[i:])
+        except json.JSONDecodeError:
+          continue
+        if isinstance(props, list) and all(isinstance(p, dict) for p in props):
+          return [p for p in props if isinstance(p.get("number"), (int, float))]
     self.log["flags"].append(f"month {month}: proposal extraction failed")
     return []
 

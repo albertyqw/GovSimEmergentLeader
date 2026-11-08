@@ -21,7 +21,7 @@ USAGE_FILE = None
 def _get():
   global _client, _sem
   if _client is None:
-    _client = anthropic.AsyncAnthropic(max_retries=3)
+    _client = anthropic.AsyncAnthropic(max_retries=3, timeout=120.0)
     _sem = asyncio.Semaphore(int(os.environ.get("EMERGENCE_CONCURRENCY", "6")))
   return _client, _sem
 
