@@ -171,10 +171,13 @@ class Run:
               " a coming month. Include restatements and agreements that name a number (e.g. 'I agree,"
               " 8 tons each'). Do not include numbers that only report past catches or the lake's"
               " stock. If a range is proposed (e.g. 8-10), use the upper bound as number and give the"
-              " range. Output only JSON: a list of objects {\"turn\": int, \"speaker\": str, \"number\":"
-              " int, \"range\": [lo, hi] or null}. Output [] if there are none.")
+              " range. Give each proposal a scope: \"per_person\" if the number is what each"
+              " fisherman should catch, \"group_total\" if it is a combined total for everyone."
+              " Output only JSON: a list of objects {\"turn\": int, \"speaker\": str, \"number\":"
+              " int, \"scope\": \"per_person\" or \"group_total\", \"range\": [lo, hi] or null}."
+              " Output [] if there are none.")
     for attempt in range(2):
-      txt = await llm.ask(prompt, 1200, "extract")
+      txt = await llm.ask(prompt, 4000, "extract")
       m = re.search(r"\[.*\]", txt, re.S)
       try:
         props = json.loads(m.group(0)) if m else None
