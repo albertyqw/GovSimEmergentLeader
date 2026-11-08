@@ -33,7 +33,7 @@ def prompt_insight_and_evidence(
       lm = model.gen(
           lm,
           name=f"evidence_{i}",
-          stop_regex=rf"{i+2}\.|\\(",
+          stop_regex=rf"{i+2}\.|\(",  # PATCH: upstream had an unbalanced group
           save_stop_text=True,
           chain=chain,
       )

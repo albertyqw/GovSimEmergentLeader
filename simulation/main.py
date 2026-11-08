@@ -7,6 +7,10 @@ import shutil
 import sys
 import uuid
 
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
+
 import hydra
 import omegaconf
 from pathfinder import get_model
@@ -44,6 +48,10 @@ def main(cfg: DictConfig):
   )
   if "gpt" in cfg.llm.path:
     run_name = os.path.join("gpt", run_name)
+  if "screen" in cfg.experiment and cfg.experiment.screen.enabled:  # PATCH
+    run_name = f"arm-{cfg.experiment.screen.arm}_seed-{cfg.experiment.seed}"
+    with omegaconf.open_dict(cfg):
+      cfg.experiment.screen.model = cfg.llm.path
   experiment_storage = os.path.join(
       os.path.dirname(__file__),
       f"./results/{cfg.experiment.name}/{run_name}",
@@ -52,6 +60,15 @@ def main(cfg: DictConfig):
     shutil.rmtree(experiment_storage)
     print(f"Removed old '{experiment_storage}' ...")
   print(f"Experiment storage: {experiment_storage}")
+  if "screen" in cfg.experiment and cfg.experiment.screen.enabled:  # PATCH: provenance
+    import json, subprocess
+    os.makedirs(experiment_storage, exist_ok=True)
+    os.environ.setdefault("PATHFINDER_USAGE_FILE", os.path.join(experiment_storage, "api_usage.jsonl"))
+    git = lambda *a: subprocess.run(["git", *a], cwd=project_root, capture_output=True, text=True).stdout.strip()
+    with open(os.path.join(experiment_storage, "meta.json"), "w") as f:
+      json.dump({"git_hash": git("rev-parse", "HEAD"), "git_dirty": bool(git("status", "--porcelain")),
+                 "seed": cfg.experiment.seed, "arm": str(cfg.experiment.screen.arm),
+                 "config": OmegaConf.to_container(cfg, resolve=True)}, f, indent=2)
 
   wrapper = ModelWandbWrapper(
       model,

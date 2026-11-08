@@ -25,9 +25,12 @@ def get_api_model(name, seed):
         return OpenAIAPI(name, seed)
     elif "mistral" in name.lower():
         return MistralAPI(name, seed)
-    # elif "claude" in name.lower():
-    #    return AnthropicAPI(name, seed)
     elif "openrouter" in name.lower():
+        name = name.replace("openrouter-", "")
+        return OpenRouter(name, seed)
+    elif "claude" in name.lower():  # PATCH: direct Anthropic API
+        return AnthropicAPI(name, seed)
+    elif False:
         name = name.replace("openrouter-", "")
         return OpenRouter(name, seed)
     else:

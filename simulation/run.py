@@ -107,6 +107,22 @@ async def run(
   else:
     raise ValueError(f"Unknown agent package: {cfg.agent.agent_package}")
 
+  # ── Screen setup (PATCH) ──────────────────────────────────────────
+  screen_rt = None
+  if "screen" in cfg and cfg.screen.enabled:
+    from simulation.screen.design import Design
+    from simulation.screen.runtime import ScreenRuntime
+    cognition_utils.SCREEN_MODE = True
+    design = Design(cfg.seed, str(cfg.screen.arm), list(cfg.screen.name_pool),
+                    n=cfg.env.num_agents, cycles=cfg.env.max_num_rounds,
+                    capacity=cfg.env.initial_resource_in_pool,
+                    cq_multiplier=cfg.screen.cq_multiplier, st_multiplier=cfg.screen.st_multiplier)
+    with omegaconf.open_dict(cfg):
+      for i, nm in enumerate(design.names):
+        cfg.personas[f"persona_{i}"].name = nm
+    screen_rt = ScreenRuntime(cfg, design, experiment_storage, cfg.screen.model)
+    screen_rt.log("design", **design.to_dict())
+
   # ── Leader setup ──────────────────────────────────────────────────
 
   leader_distribution = leaders_lib.LeaderPopulationType(
@@ -225,6 +241,10 @@ async def run(
       regen_factor_range=cfg.env.regen_factor_range,
   )
 
+  if screen_rt is not None:  # PATCH
+    env.regen_schedule = screen_rt.d.regen
+    env.discussion_first = True
+    screen_rt.personas = personas
   agent_id, obs = env.reset()
 
   # ── Phase setup ───────────────────────────────────────────────────
@@ -252,6 +272,7 @@ async def run(
       agent_id=agent_id,
       obs=obs,
       round_num=env.num_round,
+      screen=screen_rt,
   )
 
   # ── Main simulation loop ──────────────────────────────────────────
@@ -336,4 +357,8 @@ async def run(
   ctx.env.save_log()
   for persona in ctx.personas:
     ctx.personas[persona].memory.save()
+  if screen_rt is not None:  # PATCH: end-of-run interviews
+    await screen_rt.interviews()
+    screen_rt.log("run_end", cycles_completed=ctx.env.num_round,
+                  final_stock=ctx.env.internal_global_state["resource_in_pool"])
 

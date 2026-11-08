@@ -54,6 +54,9 @@ class ReflectionPhase(Phase):
         *(one_reflect(agent) for agent in home_agents)
     )
 
+    if ctx.screen is not None:  # PATCH: MARGIN (T, HR) and WRITE (Sc)
+      await ctx.screen.post_reflection(ctx)
+
     if ctx.debug:
       for agent in home_agents:
         print(f"REFLECT: {agent.identity.name}.")

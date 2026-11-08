@@ -102,9 +102,20 @@ class HarvestingPhase(Phase):
 
       return agent_id, agent, action
 
-    harvest_results = await asyncio.gather(
-        *(one_harvest(aid, a, rm) for aid, a, rm in lake_agent_data)
-    )
+    if ctx.screen is None:
+      harvest_results = await asyncio.gather(
+          *(one_harvest(aid, a, rm) for aid, a, rm in lake_agent_data)
+      )
+    else:  # PATCH: screen arm C harvests the target first and announces it
+      by_id = {aid: (aid, a, rm) for aid, a, rm in lake_agent_data}
+      done = {}
+      for group in ctx.screen.harvest_groups([aid for aid, _, _ in lake_agent_data]):
+        res = await asyncio.gather(*(one_harvest(*by_id[aid]) for aid in group))
+        for r in res:
+          done[r[0]] = r
+        if len(ctx.screen.harvest_groups(list(by_id))) > 1 and group == ctx.screen.harvest_groups(list(by_id))[0]:
+          ctx.screen.announce_upstream(res[0][2].quantity)
+      harvest_results = [done[aid] for aid, _, _ in lake_agent_data]
 
     # ── Step env sequentially with the gathered harvest actions ─────
     for _, agent, action in harvest_results:
@@ -133,6 +144,9 @@ class HarvestingPhase(Phase):
       log_step(ctx, action)
       if check_terminated(ctx, termination):
         return ctx
+
+    if ctx.screen is not None:
+      ctx.screen.after_harvest(ctx)
 
     # ── Record round stats (post-harvest pool state) ───────────────
     ctx.round_stats[ctx.round_num] = {

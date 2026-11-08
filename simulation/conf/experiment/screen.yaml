@@ -1,0 +1,68 @@
+# Overnight leadership screen (see SCREEN.md). Arm and seed are set on the command line.
+name: screen_${code_version}/${group_name}
+scenario: fishing
+debug: false
+seed: 1
+
+phases:
+  - discussion
+  - harvesting
+  - reflection
+
+defaults:
+  - persona@personas.persona_0: baseline_fisherman
+  - persona@personas.persona_1: baseline_fisherman
+  - persona@personas.persona_2: baseline_fisherman
+  - persona@personas.persona_3: baseline_fisherman
+  - persona@personas.persona_4: baseline_fisherman
+
+env:
+  name: fish_screen
+  class_name: fishing_perturbation_concurrent_env
+  max_num_rounds: 6
+  initial_resource_in_pool: 100
+  poupulation_change_after_round: double_100_cap
+  observation_other_agents_harvesting: true
+  language_nature: unconstrained
+  num_agents: 5
+  disinformation: false
+  harvesting_order: concurrent
+  assign_resource_strategy: stochastic
+  inject_universalization: false
+  inject_scenario_dynamic: false
+  regen_factor_range: [1.0, 3.0]
+  perturbations: []
+
+personas:
+  num: 5
+  persona_0: {name: A}
+  persona_1: {name: B}
+  persona_2: {name: C}
+  persona_3: {name: D}
+  persona_4: {name: E}
+
+agent:
+  agent_package: persona_v3
+  system_prompt: v3
+  cot_prompt: think_step_by_step
+  leader_population: none
+  act:
+    universalization_prompt: false
+    harvest_strategy: one_step
+    consider_identity_persona: true
+  converse:
+    inject_resource_observation: ${experiment.env.observation_other_agents_harvesting}
+    inject_resource_observation_strategy: manager
+    max_conversation_steps: 15
+    prompt_utterance: one_shot
+  store:
+    expiration_delta:
+      days: 63
+
+screen:
+  enabled: true
+  arm: "0"          # 0 A B C T T0 E S Sc CQ St HR CF A1 01 (A1 = A', 01 = 0')
+  cq_multiplier: 1.6
+  st_multiplier: 1.2
+  model: ""        # filled from llm.path at launch
+  name_pool: [Julia, Kate, Jack, Emma, Luke, Noah, Olivia, Liam, Sophia, Mason, Ava, Ethan, Mia, Leo, Zoe, Omar, Ines, Ravi, Hana, Tomas]

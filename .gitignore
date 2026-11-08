@@ -174,3 +174,7 @@ subskills/results/
 .~lock.*
 
 launch*.sh
+
+# leadership screen outputs
+simulation/results/
+runs_meta/

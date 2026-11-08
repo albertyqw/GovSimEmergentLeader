@@ -44,12 +44,18 @@ class DiscussionPhase(Phase):
               agent.other_personas_from_id[aid]
           )
 
-      (
+      if ctx.screen is not None:  # PATCH: structured screen discussion + probe
+        ctx.screen.begin_cycle(ctx)
+        conversation, _, resource_limit, html_interactions = (
+            await ctx.screen.discussion(ctx, agent, other_personas))
+        await ctx.screen.probes(ctx)
+      else:
+       (
           conversation,
           _,
           resource_limit,
           html_interactions,
-      ) = agent.converse.converse_group(
+       ) = agent.converse.converse_group(
           other_personas,
           obs.current_location,
           obs.current_time,
@@ -59,7 +65,7 @@ class DiscussionPhase(Phase):
           harvest_report=agent.harvest_report,
           leader_persona=agent.current_leader,
           debug=ctx.debug,
-      )
+       )
 
       action = PersonaActionChat(
           agent.agent_id,

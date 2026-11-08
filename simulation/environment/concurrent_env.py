@@ -273,11 +273,19 @@ class ConcurrentEnv:
         for agent in self.agents:
             self._init_agent(agent)
 
+        # PATCH (screen): seeded regeneration schedule and discussion-first order
+        if getattr(self, "regen_schedule", None):
+            self.internal_global_state["regen_factor"] = self.regen_schedule[0]
+            self._set_sustainability_threshold()
+        phase_order = [self.POOL_LOCATION, "pool_after_harvesting", "restaurant", "home"]
+        if getattr(self, "discussion_first", False):
+            phase_order = ["restaurant", self.POOL_LOCATION, "pool_after_harvesting", "home"]
+            for agent in self.agents:
+                self.internal_global_state["next_location"][agent] = "restaurant"
+
         self._agent_selector = agent_selector(self.agents)
         self.agent_selection = self._agent_selector.next()
-        self._phase_selector = agent_selector(
-            [self.POOL_LOCATION, "pool_after_harvesting", "restaurant", "home"]
-        )
+        self._phase_selector = agent_selector(phase_order)
         self.phase = self._phase_selector.next()
 
         return self.agent_selection, self._observe(self.agent_selection)
@@ -406,7 +414,7 @@ class ConcurrentEnv:
     def _step_pool_after_harvesting(self, action: PersonaActionHarvesting):
         self.internal_global_state["next_location"][
             self.agent_selection
-        ] = "restaurant"
+        ] = "home" if getattr(self, "discussion_first", False) else "restaurant"
         self.internal_global_state["next_time"][self.agent_selection] = (
             get_discussion_day(
                 self.internal_global_state["next_time"][self.agent_selection]
@@ -420,7 +428,8 @@ class ConcurrentEnv:
         if type(action) == PersonaActionChat:
             self.log_step_conversation(action)
             for a in self.agents:
-                self.internal_global_state["next_location"][a] = "home"
+                self.internal_global_state["next_location"][a] = (
+                    self.POOL_LOCATION if getattr(self, "discussion_first", False) else "home")
                 self.internal_global_state["next_time"][a] = get_reflection_day(
                     self.internal_global_state["next_time"][a]
                 )
@@ -430,7 +439,7 @@ class ConcurrentEnv:
     def _step_home(self, action: PersonaAction):
         self.internal_global_state["next_location"][
             self.agent_selection
-        ] = self.POOL_LOCATION
+        ] = "restaurant" if getattr(self, "discussion_first", False) else self.POOL_LOCATION
         self.internal_global_state["next_time"][self.agent_selection] += timedelta(
             days=1
         )
@@ -481,9 +490,13 @@ class ConcurrentEnv:
                 self.internal_global_state["resource_before_harvesting"] = (
                     self.internal_global_state["resource_in_pool"]
                 )
-                self.internal_global_state["regen_factor"] = self.random.uniform(
-                    self._regen_factor_range[0], self._regen_factor_range[1]
-                )
+                if getattr(self, "regen_schedule", None):
+                    self.internal_global_state["regen_factor"] = self.regen_schedule[
+                        min(self.num_round, len(self.regen_schedule) - 1)]
+                else:
+                    self.internal_global_state["regen_factor"] = self.random.uniform(
+                        self._regen_factor_range[0], self._regen_factor_range[1]
+                    )
                 self._set_sustainability_threshold()
                 if self.cfg.harvesting_order == "random-sequential":
                     agents = list(np.random.permutation(self.agents))

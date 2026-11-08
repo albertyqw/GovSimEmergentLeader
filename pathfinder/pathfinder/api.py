@@ -387,29 +387,91 @@ class MistralAPI(ModelAPI):
 
 
 class AnthropicAPI(ModelAPI):
+    """Anthropic Messages API backend, patched for anthropic>=2 / Claude 5.5 models.
+
+    Changes vs. upstream (see GovSim PATCHES.md):
+    - temperature/top_p are NOT sent: SDK 2.x sends anthropic-version 2026-10-21,
+      which rejects any sampling parameter. Sampling uses the API default
+      (stochastic, i.e. temperature > 0).
+    - leading system messages go into the `system` parameter.
+    - thinking is turned off (haiku: disabled, sonnet-5-5: between_tools) so
+      outputs stay plain text and cheap; override with PATHFINDER_THINKING.
+    - retries only on 429/5xx/connection errors (SDK built-in), not on 400s.
+    - per-call token usage is appended to a JSONL file for cost accounting.
+    """
+
     def __init__(self, model_name, seed):
         super().__init__(model_name, seed, api_assistant=False)
         from anthropic import Anthropic
 
-        self.client = Anthropic()
+        self.client = Anthropic(max_retries=8)
+        usage_dir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "..", "api_usage"
+        )
+        self.usage_file = os.environ.get(
+            "PATHFINDER_USAGE_FILE",
+            os.path.join(usage_dir, f"anthropic_{uuid.uuid4()}.jsonl"),
+        )
+        os.makedirs(os.path.dirname(os.path.abspath(self.usage_file)), exist_ok=True)
+
+    def _thinking_param(self):
+        mode = os.environ.get("PATHFINDER_THINKING")
+        if mode is None:
+            mode = "between_tools" if "sonnet-5-5" in self.model_name else "disabled"
+        if mode == "default":
+            return None
+        return {"type": mode}
 
     def request_api(self, chat, tmeperature, top_p, max_tokens):
-        from anthropic._exceptions import APIStatusError
-
-        @backoff.on_exception(backoff.expo, APIStatusError)
-        def completions_with_backoff(**kwargs):
-            return self.client.messages.create(**kwargs)
-
         if chat[-1]["role"] == "assistant":
             raise Exception(
                 "Assistant should not be the last role in the chat for Anthropic."
             )
 
-        out = completions_with_backoff(
+        system_parts = []
+        messages = []
+        for entry in chat:
+            if entry["role"] == "system" and not messages:
+                system_parts.append(entry["content"])
+            elif entry["content"] == "":
+                continue
+            elif entry["role"] == "system":
+                messages.append({"role": "user", "content": entry["content"]})
+            else:
+                messages.append({"role": entry["role"], "content": entry["content"]})
+
+        kwargs = dict(
             model=self.model_name,
-            messages=chat,
-            temperature=tmeperature,
-            top_p=top_p,
-            max_tokens=max_tokens,
+            messages=messages,
+            max_tokens=min(max_tokens, 16000),
         )
-        return out.content[0].text
+        if system_parts:
+            kwargs["system"] = "\n\n".join(system_parts)
+        thinking = self._thinking_param()
+        if thinking is not None:
+            kwargs["thinking"] = thinking
+
+        out = self.client.messages.create(**kwargs)
+        if out.stop_reason == "refusal":
+            raise Exception(f"Anthropic refusal: {out.stop_details}")
+
+        self.token_in = out.usage.input_tokens
+        self.token_out = out.usage.output_tokens
+        with open(self.usage_file, "a") as f:
+            f.write(
+                json.dumps(
+                    {
+                        "model": self.model_name,
+                        "input_tokens": out.usage.input_tokens,
+                        "output_tokens": out.usage.output_tokens,
+                        "cache_read_input_tokens": out.usage.cache_read_input_tokens
+                        or 0,
+                        "cache_creation_input_tokens": out.usage.cache_creation_input_tokens
+                        or 0,
+                        "stop_reason": out.stop_reason,
+                    }
+                )
+                + "\n"
+            )
+
+        return "".join(b.text for b in out.content if b.type == "text")

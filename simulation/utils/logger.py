@@ -23,7 +23,7 @@ class WandbLogger:
         config=configs,
         tags=tags,
         save_code=True,
-        mode="online" if not debug else "disabled",
+        mode=os.environ.get("WANDB_MODE", "online" if not debug else "disabled"),  # PATCH
     )
     print(f"Storage name: {run.name}-{run.id}")
     self.run_id = run.id

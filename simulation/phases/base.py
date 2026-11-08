@@ -54,6 +54,7 @@ class PhaseContext:
   )
   election_results: dict = dataclasses.field(default_factory=dict)
   terminated: bool = False
+  screen: Any = None  # PATCH: ScreenRuntime when screen.enabled
 
 
 class Phase(abc.ABC):
