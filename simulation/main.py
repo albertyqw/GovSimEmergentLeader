@@ -49,8 +49,7 @@ def main(cfg: DictConfig):
       f"./results/{cfg.experiment.name}/{run_name}",
   )
   if os.path.exists(f"{experiment_storage}"):
-    shutil.rmtree(experiment_storage)
-    print(f"Removed old '{experiment_storage}' ...")
+    raise FileExistsError(f"Refusing to overwrite existing run directory: {experiment_storage}")
   print(f"Experiment storage: {experiment_storage}")
 
   wrapper = ModelWandbWrapper(
