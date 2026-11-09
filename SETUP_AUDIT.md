@@ -8,7 +8,7 @@
 - `.env` is already ignored by the original `.gitignore`; no edit is needed.
 - Execution host: the user selected this Mac, with working directory `/Users/yongqi/Documents/emergent_leaders/GovSimEmergentLeader`. The initial shell uses Python 3.10.11; the isolated `.venv` uses the available Python 3.11.16 interpreter.
 - `OPENROUTER_API_KEY` is absent from this session's environment. No authenticated key/balance request or paid model call has been made.
-- The user selected default Mac requirements plus Pathfinder's declared dependencies, retaining all default pins and the repository's PyTorch 2.2.0 / torchvision 0.17.0 / torchaudio 2.2.0 pins. Installation in `.venv` completed and `pip check` passed; dependency declaration files remain unchanged. Runtime import failed because the unpinned Transformers dependency resolved to a version incompatible with PyTorch 2.2.0. See the failure record below.
+- The user selected default Mac requirements plus Pathfinder's declared dependencies, retaining all default pins and the repository's PyTorch 2.2.0 / torchvision 0.17.0 / torchaudio 2.2.0 pins. After the recorded initial failure, the user authorized Transformers 4.51.0 and compatible versions of unpinned dependencies. The simulation now imports successfully, `pip check` passes, and all nine fixed pins are unchanged. Original dependency declarations remain unchanged; `constraints-macos.txt` captures the installed environment.
 
 ## Public OpenRouter catalog check
 
@@ -76,12 +76,26 @@ This verifies argument compatibility, not a complete runtime or stub run. Full r
 - B5 constants were copied from `METHODS.md`, which remains byte-identical to the supplied file.
 - `.venv/bin/python -m unittest discover -s tests -v`: all 10 focused tests passed (exact texts, three mayor-prompt fidelity cases and six randomness/name checks). These are focused checks, not the full B9 stub suite or API payload verification.
 
-## Runtime import failure and current stop
+## Initial runtime import failure and approved resolution
 
 - Installation of the approved dependency set succeeded, with no fixed pins changed. `pip check` reports no broken declared requirements.
 - Import-only check: `import simulation.run` with W&B disabled. This neither starts a simulation nor instantiates the API model.
 - Transformers 5.22.2 reports that PyTorch >=2.6 is required, disabling the installed PyTorch 2.2.0 integration. The subsequent sentence-transformers import fails with `NameError: name 'nn' is not defined` in Transformers' pipeline-parallel module.
-- The failure is a runtime compatibility issue that package metadata resolution did not detect. No dependency upgrade, downgrade or workaround has been attempted after discovering it.
-- Stop under B0/B10 and request permission to constrain unpinned dependencies to a compatible set, beginning with Transformers 4.51.0 from the repository's alternate requirements file, while preserving the user-selected default fixed pins.
+- The failure was a runtime compatibility issue that package metadata resolution did not detect. Work paused until the user authorized the compatibility resolution.
+- Installing Transformers 4.51.0 together with the original requirement sets and fixed pins resolved sentence-transformers 5.7.0, huggingface-hub 0.36.2 and tokenizers 0.21.4. No selected fixed pin changed. Importing `simulation.run` now passes.
 
-Other planning questions about silent-agent eligibility, attempt directories, spending scope and analysis definitions remain open and must be resolved before the corresponding implementation.
+## First actual stub-run results and current stop
+
+- The real runner, environment, agents, memory stores, prompt builders, wrapper and Pathfinder parser execute against a canned transport stub. No OpenRouter client or external model is used.
+- A six-cycle N=8 replica stub completed, produced all 48 actual catches of 2 tons, and created native memory/log files. A strict assertion that every API request has an 8000-token cap failed: original fresh importance-rating requests use 1000.
+- A separate one-cycle neutral-cue stub test passed: the report is public, its body is unchanged, the framework is Announcer, the opener matches the dedicated slot draw, and mayor/truthfulness cues are absent from captured prompts.
+- One-cycle diagnostics: 45 requests at 8000 tokens and 32 importance-rating requests at 1000. Eight original insight-regex warnings were observed, caught by the original wrapper's fallback. Details are in `QUIRKS.md`.
+- The token-cap fidelity discrepancy requires a user decision under B0/B10 before changing the assertion or request parameters. No simulation cap or original reflection regex has been modified.
+
+## Additional user decisions
+
+- Ask every present agent the private leadership question, including silent agents.
+- Resume the launcher by skipping validated completions and restarting failed seeds in fresh attempt directories, preserving failed originals.
+- Count all project API spending toward $90, including smoke tests, retries, failed attempts and later judge calls.
+
+Remaining analysis-definition questions must be resolved before their implementation; do not treat the focused tests as the full B9 acceptance suite.

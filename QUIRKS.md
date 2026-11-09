@@ -49,4 +49,19 @@ These observations do not authorize changes to original simulation behavior.
 - The user-selected default requirements leave `transformers` and `sentence_transformers` unpinned. Installation resolved Transformers 5.22.2 and sentence-transformers 6.2.0 while retaining the repository's PyTorch 2.2.0 pin.
 - Installation and `pip check` passed. Importing `simulation.run` failed: Transformers disabled PyTorch because it requires >=2.6, then raised `NameError: name 'nn' is not defined` in `transformers/distributed/pipeline_parallel.py`, reached through the existing sentence-transformers import.
 - No model was instantiated and no paid call was made. Do not upgrade PyTorch or alter source imports to conceal this failure. The repository's alternate requirements file pins Transformers 4.51.0.
-- Status: stopped for approval to constrain otherwise-unpinned dependencies to a compatible set, starting with the repository's Transformers 4.51.0 pin while preserving the default fixed pins.
+- Resolution: the user approved Transformers 4.51.0 and compatible unpinned dependencies while retaining all fixed pins. The resolver selected sentence-transformers 5.7.0, huggingface-hub 0.36.2 and tokenizers 0.21.4. The simulation imports successfully, `pip check` passes, and all nine selected fixed pins are unchanged. `constraints-macos.txt` records the resolved environment.
+
+## B2 / B14: Fresh importance-rating calls use a 1,000-token cap
+
+- Locations: `pathfinder/pathfinder/api.py:29-35,76-83`; `simulation/persona/cognition/store_prompts.py:32-40` and its other fresh `select`-based rating calls.
+- `ModelAPI` initializes `max_tokens` to 1000. Generation sets it to 8000, but `select` does not change it. Importance ratings start fresh chains with `select` and therefore request 1000 tokens.
+- A one-cycle N=8 transport stub captured 45 requests with an 8000-token cap and 32 with a 1000-token cap; all 32 shorter-cap requests were importance ratings. The original adapter and wrapper were used unchanged.
+- B2/B14 assume 8000 for all calls, while B9/B10 require original request fidelity and unchanged sampling parameters. No cap has been changed. The six-cycle stub completed but its strict all-8000 assertion fails.
+- Status: awaiting the user's interpretation before changing the test expectation or any request parameters.
+
+## B9 / B10: Original insight-reflection regex triggers the default fallback
+
+- Location: `simulation/persona/cognition/reflect_prompts.py:37-44` (pinned-source reference).
+- The insight-generation stop pattern contains an unmatched opening parenthesis after an escaped backslash. Pathfinder wraps and compiles that pattern; the original model wrapper catches the regex error and substitutes its empty default for the insight.
+- The actual one-cycle stub produced eight regex warnings (one per N=8 agent), while the simulation still completed. The warnings begin `An exception occured: missing ) at position 14`.
+- The reflection prompt and regex remain unchanged under B10. No repair or warning suppression has been added to simulation code. Tests retain captured warnings as evidence; whether the stub suite should explicitly accept this fallback needs clarification with the token-cap discrepancy.
