@@ -18,7 +18,7 @@ from omegaconf import OmegaConf
 
 from simulation.intervention_randomness import NAME_POOL
 from simulation.persona.cognition.utils import render_name
-from simulation.utils.models import ModelWandbWrapper
+from simulation.study_models import StudyModelWrapper
 
 
 def utc_now():
@@ -58,6 +58,7 @@ class RunRecorder:
         self.local = threading.local()
         self.buffers = {}
         self.retrievals = {}
+        self.retrieval_limits = {}
         self.counter = 0
         self.cycle = 0
         self.phase = "initialization"
@@ -121,6 +122,7 @@ class RunRecorder:
                     "importance_score": importance[index], "combined_score": combined[index],
                 })
             self.retrievals[persona.identity.name] = metadata
+            self.retrieval_limits[persona.identity.name] = top_k
             return result
 
         persona.retrieve.retrieve = observed
@@ -141,7 +143,9 @@ class RunRecorder:
             "harvest", "utterance", "elicitation", "perceived_leadership", "reflection_insight"
         ) else []
         self.local.context = {"agent_identity": agent, "call_type": kind,
-                              "retrieved_memories": copy.deepcopy(retrieved), "query": query}
+                              "retrieved_memories": copy.deepcopy(retrieved), "query": query,
+                              "retrieval_top_k": self.retrieval_limits.get(agent) if kind in (
+                                  "harvest", "utterance", "elicitation", "perceived_leadership", "reflection_insight") else None}
         self.local.pending = []
         self.local.current = None
 
@@ -163,6 +167,7 @@ class RunRecorder:
                 "tokens": {"input": None, "output": None, "reasoning": None, "cached": None},
                 "cost": None, "latency": None, "retry_count": 0, "finish_reason": None,
                 "generation_id": None, "error": None, "retrieved_memories": context.get("retrieved_memories", []),
+                "retrieval_top_k": context.get("retrieval_top_k"),
             }
             self.buffers[call_id] = record
             self.local.pending.append(call_id)
@@ -298,7 +303,8 @@ class RunRecorder:
             "resolved_config": cfg, "model": self.config.llm.path.removeprefix("openrouter-"),
             "provider_routing": {"only": [self.provider], "allow_fallbacks": False},
             "temperature": self.config.llm.temperature, "top_p": self.config.llm.top_p,
-            "max_tokens": {"generation": 8000, "fresh_importance": 1000}, "thinking": "default; no budget or effort set",
+            "max_tokens": {"generation": getattr(self.config.experiment.agent, "study_generation_max_tokens", 8000), "fresh_importance": 1000}, "thinking": "default; no budget or effort set",
+            "paper_definitions": bool(getattr(self.config.experiment.agent, "paper_definitions", False)),
             "pip_freeze": subprocess.check_output([os.sys.executable, "-m", "pip", "freeze", "--disable-pip-version-check"], text=True).splitlines(),
             "python": platform.python_version(), "os": platform.platform(), "start_time": self.started, "end_time": utc_now(),
             "status": status or ("collapsed" if getattr(self, "collapsed", False) else "completed"),
@@ -313,7 +319,7 @@ class RunRecorder:
         self.finalized = True
 
 
-class RecordingWrapper(ModelWandbWrapper):
+class RecordingWrapper(StudyModelWrapper):
     def __init__(self, base_lm, recorder, **kwargs):
         super().__init__(base_lm, **kwargs)
         self.recorder = recorder

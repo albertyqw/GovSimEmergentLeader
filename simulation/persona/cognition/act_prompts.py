@@ -58,6 +58,9 @@ def prompt_action_choose_amount_of_fish_to_catch(
       lm += f"{svo_prompt}\n"
     if leader_prompt:
       lm += f"{leader_prompt}\n"
+    if getattr(agent.cfg, "paper_definitions", False):
+      _, paper_truthfulness, _ = leaders_lib.get_leader_persona_prompts(agent)
+      lm += f"{paper_truthfulness}\n"
     lm += (
         "Task: With a fishing range set between"
         f" {interval[0]}-{interval[-1]},"

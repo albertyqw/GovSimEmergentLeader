@@ -147,9 +147,14 @@ class ConverseComponent(component.Component):
           focal_points += current_conversation[0:1]
         elif len(current_conversation) > 5:
           focal_points += current_conversation[0:2]
-      focal_points = self.other_personas[
-          current_persona.identity.name
-      ].retrieve.retrieve(focal_points, top_k=5)
+      if getattr(self.persona.cfg, "paper_definitions", False):
+        focal_points = self.other_personas[
+            current_persona.identity.name
+        ].retrieve.retrieve(focal_points, top_k=10)
+      else:
+        focal_points = self.other_personas[
+            current_persona.identity.name
+        ].retrieve.retrieve(focal_points, top_k=5)
 
       if self.cfg.prompt_utterance == "one_shot":
         prompt = (

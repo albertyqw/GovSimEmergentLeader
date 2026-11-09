@@ -77,6 +77,9 @@ async def run(
     experiment_storage: str,
 ):
   """Run the simulation."""
+  if hasattr(cfg.agent, "study_generation_max_tokens"):
+    wrapper.study_generation_max_tokens = cfg.agent.study_generation_max_tokens
+    framework_wrapper.study_generation_max_tokens = cfg.agent.study_generation_max_tokens
   if not os.path.exists(experiment_storage):
     os.makedirs(experiment_storage)
 
@@ -114,7 +117,8 @@ async def run(
       cfg.agent.leader_population
   )
   leader_svos, leader_types = leaders_lib.sample_leader_svos(
-      leader_distribution
+      leader_distribution,
+      **({"paper_seed": cfg.seed} if getattr(cfg.agent, "paper_definitions", False) else {}),
   )
 
   leader_candidates = {}
@@ -155,6 +159,9 @@ async def run(
       personas[f"persona_{i}"].focal_values = True
 
   num_personas = cfg.personas.num
+  if getattr(cfg.agent, "paper_definitions", False):
+    for persona in personas.values():
+      persona.paper_disinformation = disinformation
   identities = {
       f"persona_{i}": PersonaIdentity(
           agent_id=f"persona_{i}",
@@ -215,6 +222,8 @@ async def run(
     )
     if hasattr(cfg.agent, "lake_scale"):
       identities[persona].lake_scale = cfg.agent.lake_scale
+    if getattr(cfg.agent, "paper_definitions", False):
+      identities[persona].paper_definitions = True
   for persona in personas:
     for other_persona in personas:
       personas[persona].add_reference_to_other_persona(

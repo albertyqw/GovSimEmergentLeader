@@ -57,6 +57,7 @@ env:
   - 1.0
   - 3.0
   perturbations: []
+  paper_definitions: true
   collapse_threshold: 20
 personas:
   num: 32
@@ -150,3 +151,5 @@ agent:
   values_plan: false
   stakes_tenure: false
   lake_scale: 4
+  paper_definitions: true
+  study_generation_max_tokens: 16000

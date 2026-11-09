@@ -100,8 +100,12 @@ class LeaderPopulationType(enum.Enum):
 
 def sample_svo_angle(
     svo_category: persona_lib.SVOPersonaType,
+    *, paper_key: str | None = None,
 ) -> float:
   """Sample an SVO angle for the given category."""
+  if paper_key is not None:
+    from simulation.paper_definitions import svo_angle
+    return svo_angle(svo_category.value, paper_key)
   if persona_lib.SVOPersonaType.INDIVIDUALISTIC == svo_category:
     svo_angle = np.random.uniform(-12.04, 22.45)
   elif persona_lib.SVOPersonaType.PROSOCIAL == svo_category:
@@ -395,6 +399,7 @@ def make_leader_report(
 
 def sample_leader_svos(
     leader_population_type: LeaderPopulationType,
+    *, paper_seed: int | None = None,
 ) -> list[float]:
   """Sample leader SVOs."""
   if leader_population_type == LeaderPopulationType.BALANCED:
@@ -442,7 +447,11 @@ def sample_leader_svos(
     )
   svos = []
   for svo_category in svo_categories:
-    svos.append(sample_svo_angle(svo_category))
+    if paper_seed is not None:
+      key = f"paper_svo|{paper_seed}|{len(svos)}|{svo_category.value}"
+      svos.append(sample_svo_angle(svo_category, paper_key=key))
+    else:
+      svos.append(sample_svo_angle(svo_category))
   return svos, svo_categories
 
 
@@ -453,6 +462,15 @@ def get_leader_persona_prompts(
   svo_prompt = ""
   if persona.svo_type != persona_lib.SVOPersonaType.NONE:
     task = SVO_FISHERMAN_TASK if getattr(persona, "focal_values", False) else SVO_LEADER_TASK
+    if getattr(persona.cfg, "paper_definitions", False):
+      from simulation.paper_definitions import SVO_PRIVACY_PROMPT
+      task = task.replace(
+          "  An altruistic individual is motivated to help others and will sacrifice their own outcomes to benefit someone else, showing low self-interest.\n", "",
+      ).replace("Altruism (SVO angle > 57.15 degrees)", "Altruism (SVO angle between 57.15 and 90 degrees)")
+      task = task.replace("Competitiveness (SVO angle < -12.04 degrees)", "Competitiveness (SVO angle between -45.0 and -12.04 degrees)")
+      task = task.replace("(doing well for oneself).A PROSOCIAL", "(doing well for oneself).\nA PROSOCIAL")
+      task = task.replace("or to minimize the difference between own and others' outcomes (equality).", "or ensure fairness and equality in outcomes.")
+      task = task.replace("Your SVO is: \n", SVO_PRIVACY_PROMPT + "\nYour SVO is: \n")
     svo_prompt = task + svo_angle_prompt(
         svo_angle=persona.svo_angle,
         svo_type=persona.svo_type,
@@ -461,6 +479,9 @@ def get_leader_persona_prompts(
     disinfo_prompt = INSINCERE_AGENDA_PROMPT
   else:
     disinfo_prompt = HONEST_AGENDA_PROMPT
+  if getattr(persona.cfg, "paper_definitions", False):
+    from simulation.paper_definitions import HONESTY_PROMPT, DECEPTION_PROMPT
+    disinfo_prompt = DECEPTION_PROMPT if getattr(persona, "paper_disinformation", persona.disinfo) else HONESTY_PROMPT
   leader_prompt = ""
   if persona.current_leader:
     leader_name = persona.current_leader.identity.name

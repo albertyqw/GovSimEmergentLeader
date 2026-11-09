@@ -55,7 +55,7 @@ def prompt_converse_utterance_in_group(
     )
     if svo_prompt:
       lm += f"{svo_prompt}\n"
-    if not getattr(init_persona.cfg.converse, "drop_truthfulness_line", False):
+    if getattr(init_persona.cfg, "paper_definitions", False) or not getattr(init_persona.cfg.converse, "drop_truthfulness_line", False):
       lm += f"{disinfo_prompt}\n"
     lm += f"{leader_prompt}\n"
     lm += "\nConversation so far:\n"

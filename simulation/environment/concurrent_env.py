@@ -226,6 +226,13 @@ class ConcurrentEnv:
         self.terminations[agent] = False
 
     def _set_sustainability_threshold(self):
+        if getattr(self.cfg, "paper_definitions", False):
+            from simulation.paper_definitions import sustainability_threshold
+            self.internal_global_state["sustainability_threshold"] = sustainability_threshold(
+                self.internal_global_state["resource_in_pool"], self.cfg.initial_resource_in_pool,
+                self.internal_global_state["num_agents"], self.internal_global_state["regen_factor"],
+            )
+            return
         regen_factor = self.internal_global_state["regen_factor"]
         sustainability_threshold = (
             (regen_factor - 1)

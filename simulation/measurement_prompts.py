@@ -36,7 +36,7 @@ def conversation_prefix(persona, participants, memories, location, time, context
     text += f"Scenario: {names} are engaged in a group chat."
     if svo:
         text += f"{svo}\n"
-    if not getattr(persona.cfg.converse, "drop_truthfulness_line", False):
+    if getattr(persona.cfg, "paper_definitions", False) or not getattr(persona.cfg.converse, "drop_truthfulness_line", False):
         text += f"{disinfo}\n"
     text += f"{leader}\n"
     return text
@@ -66,7 +66,7 @@ def parse_elicitation(raw, final_month=False):
 
 def measure(model, persona, participants, location, time, context, report, kind, conversation=None):
     """One model generation; retrieval is read-only and output stays private."""
-    memories = persona.retrieve.retrieve([context], top_k=5)
+    memories = persona.retrieve.retrieve([context], top_k=10 if getattr(persona.cfg, "paper_definitions", False) else 5)
     prefix = conversation_prefix(persona, participants, memories, location, time, context)
     text = prefix + f"\nCurrent public fishing report:\n{report}\n\n"
     final_month = getattr(persona.identity, "stakes_months_remaining", None) == 1

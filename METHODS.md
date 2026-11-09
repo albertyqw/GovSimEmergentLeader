@@ -1,7 +1,7 @@
 # Conditions for Emergent Leadership in GovSim
 ## Methods and implementation specification
 
-**Version:** final, November 2026; token-cap amendment approved 8 November 2026. This document supersedes `CLAUDE_CODE_PROMPT.md` and the earlier setup-differences doc.
+**Version:** final, November 2026; paper-alignment amendments approved 8 November 2026. This document supersedes `CLAUDE_CODE_PROMPT.md` and the earlier setup-differences doc.
 
 **How to use it.** Part A is the methods section for the research report: every design decision and its rationale. Part B is the binding implementation specification for the coding agent. Where Part A and Part B differ in detail, Part B governs implementation. Preserve this file as `METHODS.md`, except for explicit user-approved amendments; fidelity tests read intervention texts from it.
 
@@ -68,20 +68,20 @@ All framework calls (summary, limit extraction) use the same model, as in the co
 
 ## A6. Baseline: deliberate changes from AgentElect's No-Leader condition
 
-Our baseline removes three cues that tell agents a leader exists. A study of emergent leadership cannot prime a leader in its control condition.
+Our baseline removes remaining code-derived cues that tell agents a leader exists; the common paper-aligned honesty instruction is retained in every arm. A study of emergent leadership cannot prime a leader in its control condition.
 
 | Change | AgentElect No-Leader | Ours | Reason |
 |---|---|---|---|
 | Discussion opener | Framework speaker "Anonymous Leader" says it will lead the group, then reads the report | Framework speaker "Announcer" reads the report only | Self-declared leader in every discussion |
 | Harvest prompt | Always says the current policy follows the mayor's agenda, even with no agenda | Line omitted when there is no agenda | Mayor cue at the moment of each catch |
-| Conversation prompt | Every agent is told "As a leader, you will now craft your policy agenda…" on every turn | Line omitted | Every agent told it is a leader |
+| Conversation prompt | Pinned code has an agenda-crafting leader cue | Common paper override replaces it in every arm with paper-aligned honesty instructions | Preserve honesty without introducing a formal leader cue |
 | Opener draw | Global `random.choice` | Dedicated seeded generator | Identical openers across arms for a given seed |
 | Measurement | None | Pre-discussion elicitation and a post-discussion perceived-leadership question, both private and never stored in memory | Data for adoption, convergence, and peer-nominated leadership |
 | Seeds | 10 | 5 | Budget |
 
-Because of these changes, our baseline is not a replication of AgentElect's No-Leader results. The replica condition (A3) measures their combined effect directly.
+Because of these changes and the disclosed common paper-alignment overrides, our baseline is not an exact replication of the pinned AgentElect No-Leader code. The replica condition (A3) measures their combined effect directly.
 
-The truthfulness line deserves a note. In AgentElect it manipulates leader honesty: elected leaders see true catches privately and may misreport them. Voters are hard-coded to the honest version, so for them it was never a variable, only a leftover from shared prompt code.
+The pinned code's truthfulness line manipulates leader honesty and hard-codes voters honest. Under the common paper override, published honesty/deception semantics apply to all strategic agent prompts using the run's truthfulness setting. Current study runs are honest. The baseline does not lose this common honesty instruction when its old agenda-cue suppression flag is enabled.
 
 ## A7. Interventions
 
@@ -89,7 +89,7 @@ The truthfulness line deserves a note. In AgentElect it manipulates leader hones
 
 One agent privately receives two additions to its prompts:
 
-1. **AgentElect's prosocial Social Value Orientation (SVO) description**, exactly as the code renders it, with one change: "You are an leader in the fishing community" becomes "You are a fisherman in the fishing community." The angle is drawn uniformly from the prosocial range, 22.45° to 57.15°. The code has no instruction to keep the angle secret (the paper's appendix shows one; we follow the code), so the agent may disclose or advocate its values.
+1. **AgentElect's prosocial Social Value Orientation (SVO) description**, with the common paper-alignment corrections in B2 and the role change: "You are an leader in the fishing community" becomes "You are a fisherman in the fishing community." The angle is drawn uniformly from the prosocial range, 22.45° to 57.15°. The common paper override adds the appendix's confidentiality semantics; the agent may advocate its values without disclosing its private SVO angle.
 2. **A prosocial policy agenda**, adapted from an AgentElect prosocial leader's agenda with leader references removed (full text in B5).
 
 The focal agent harvests and speaks like everyone else and holds no formal role. Its slot rotates by seed (`seed % 8`). Because values and plan arrive together and there is no control arm, effects are attributed to the combination.
@@ -107,7 +107,7 @@ Design choices and their reasons:
 
 ### Coordination load
 
-Group size rises from 8 to 16 and 32. Lake capacity, starting stock, and collapse threshold scale with N (100, 200, 400 tons; 5, 10, 20 tons), which holds each agent's sustainable share constant: the sustainability threshold ψ = (ρ − 1)S / (Nρ) is unchanged when S and N scale together. The discussion limit stays at 50 utterances, so airtime per agent falls as N rises. AgentElect's 20-agent condition kept capacity at 100 tons, so our scaled conditions are not compared with it.
+Group size rises from 8 to 16 and 32. Lake capacity, starting stock, and collapse threshold scale with N (100, 200, 400 tons; 5, 10, 20 tons), which holds each agent's sustainable share constant: the paper threshold ψ = max((Sρ − M)/(Nρ), 0) is unchanged when stock S, capacity M and N scale together. The discussion limit stays at 50 utterances, so airtime per agent falls as N rises. AgentElect's 20-agent condition kept capacity at 100 tons, so our scaled conditions are not compared with it.
 
 ## A8. Measurement instruments
 
@@ -132,7 +132,7 @@ Each primary endpoint is reported on all cycles and excluding cycles in which th
 
 **Leadership measures.**
 - **Proposal adoption:** whose preferred number becomes the agreed limit, against chance (1/N). Sources: each agent's first numeric proposal in discussion, and each agent's pre-discussion preferred limit, which covers agents who never speak.
-- **Social influence:** degree, betweenness, and eigenvector centrality on a directed graph whose edges are name mentions and next-speaker nominations, following AgentElect's `social.py`.
+- **Social influence:** degree, betweenness, and eigenvector centrality on a directed graph whose edges are name mentions and next-speaker nominations, using the paper-defined incoming degree and inverse-distance fractional betweenness specified in B2. Original `social.py` is retained only for explicitly labeled legacy comparisons.
 - **Peer-nominated leadership:** how often each agent is named most influential, against chance.
 - **Airtime:** utterances per agent; share of agents who never speak.
 
@@ -195,6 +195,7 @@ Estimated cost is $90–100 for 30 runs with dynamic thinking, at OpenRouter's r
 4. Never write the OpenRouter key to a file, log, or commit.
 5. Section B14 lists discrepancies already found between the paper and the code. Follow the resolutions given there.
 6. Section B15 covers running under Codex. It overrides anything else here about who starts runs.
+7. Source hierarchy (user-approved amendment): use the paper's stated definitions first and the pinned repository only where information is unavailable. The common paper-alignment overrides in B2 apply to every condition, replica included. Preserve deliberate study interventions and untouched original paths when these overrides are off.
 
 ## B1. Setup
 
@@ -221,17 +222,31 @@ Estimated cost is $90–100 for 30 runs with dynamic thinking, at OpenRouter's r
 | Seeds | 0, 1, 2, 3, 4 |
 | Lake | Capacity 100, starts full, collapse below 5 |
 | Regeneration | Unchanged: Uniform(1.0, 3.0) per cycle, capped, cycle 1 fixed at 2.0, unseeded |
-| Memory, reflection, harvest allocation, parsing | Unchanged |
+| Memory, reflection, harvest allocation, parsing | Ten-entry recall requests under the common paper override; otherwise preserve original retrieval scoring, memory storage, reflection and parsing quirks, and harvest allocation |
+
+
+### Common paper-alignment overrides
+
+Set `env.paper_definitions: true`, `agent.paper_definitions: true`, and `agent.study_generation_max_tokens: 16000` in every study YAML. These are explicit user-approved exceptions to pinned-code fidelity, not arm-specific interventions. Original defaults and code paths remain when the overrides are absent/off.
+
+- **Sustainability threshold:** use the displayed equation in Definition 3.2, `max((stock * factor - capacity) / (N * factor), 0)`, with no additional integer floor. Use this threshold in environment observations, raw cycle logging and over-usage calculations. This changes the benchmark, not harvest allocation or regeneration. The threshold is not disclosed to agents.
+- **Degree:** directed weighted incoming degree, `sum_u w(u,v)`. Include every present agent, including silent agents with zero degree.
+- **Betweenness:** directed shortest paths with distance `1/w(u,v)` and fractional credit across all equal shortest paths, excluding source/target endpoints. Use the unnormalized sum in the paper's equation. Exact rational inverse distances preserve ties. Use these same definitions in random-target nulls.
+- **Memory recall:** request ten entries for conversation, private instruments, harvesting and home reflection. Preserve the existing expiry filtering, scoring, deduplication and return ordering; fewer than ten may be available after filtering/deduplication.
+- **Altruistic angles:** uniform on 57.15–90 degrees. Other category ranges remain as published; current values agents are prosocial. Study-only sampling uses independent keyed generators, never new global RNG calls. Do not introduce altruistic agents into the current design.
+- **Prompts:** replace code-only agenda-crafting honesty/deception instructions with paper-aligned instructions; honesty is common to all current arms, including baseline. Add SVO confidentiality only to agents receiving SVO text. Remove the extra fixed-doubling sentence from the general task. Align SVO category bounds, remove duplicated altruism text and restore its sentence separation; retain the focal agent's fisherman role. The honesty sentence is transcribed; deception and confidentiality instructions are semantic paraphrases, not claimed character-identical paper quotations. Define their exact study strings in `simulation/paper_definitions.py`. B5 texts remain unchanged.
+
+Where the paper does not specify an implementation detail, retain repository behavior: native integer stock regeneration, first-cycle factor 2.0, retrieval scores, insight-regex fallback, and end-of-cycle depletion checking. The paper's broad depletion wording does not determine sub-phase interrupt mechanics. Preserve these disclosed implementation choices rather than inventing new ones.
 
 ## B3. Baseline changes
 
-Each change sits behind its own config flag. With every flag off, the branch must behave exactly as the original commit (the replica condition).
+Each change sits behind its own config flag. With all B3 flags and the common B2 overrides off, the branch must behave exactly as the original commit. Study replica runs keep B3 off but enable the disclosed common B2 overrides.
 
 | Flag | Change |
 |---|---|
 | `neutral_announcer` | Replace the No-Leader opener's speaker identity "Anonymous Leader" with framework identity "Announcer", and its message with `ANNOUNCER_TEMPLATE` (B5) filled with the unchanged output of `make_harvest_report` |
 | `drop_mayor_line` | In `act_prompts.py`, omit the line beginning "The current policy following the mayor's agenda is" when the agenda is empty or None |
-| `drop_truthfulness_line` | In `converse_prompts.py`, omit the `disinfo_prompt` line (currently `lm += f"{disinfo_prompt}\n"`) for every agent. Leave the SVO and leader-status lines untouched |
+| `drop_truthfulness_line` | Suppress the original code's agenda-crafting line. Under B2 paper alignment, retain the common paper-aligned honesty/deception instruction; it is not a leader cue |
 | `seeded_opener` | Replace the opener's `random.choice(target_personas)` with a choice from a dedicated generator (B6) |
 | `elicitation` | Add the pre-discussion elicitation (B4.4) |
 | `perceived_leadership` | Add the post-discussion question (B4.5) |
@@ -249,7 +264,7 @@ All B3 flags on. N = 8.
 ### B4.3 Values and plan
 All B3 flags on, plus:
 - The persona in slot `seed % 8` gets `svo_type = PROSOCIAL` and `svo_angle` drawn as in B6. `leader_population` stays `none`. `get_leader_persona_prompts` then injects the SVO text into its harvest and conversation prompts, as it does for any persona with an SVO type.
-- Add a constant `SVO_FISHERMAN_TASK` equal to `SVO_LEADER_TASK` with its opening "You are an leader in the fishing community" replaced by "You are a fisherman in the fishing community". Every other character stays identical, including the code's existing quirks (the duplicated altruism sentence, the missing space after the individualism sentence). Use it in place of `SVO_LEADER_TASK` for this persona only. Do not add any secrecy instruction.
+- Add a constant `SVO_FISHERMAN_TASK` equal to `SVO_LEADER_TASK` with its opening "You are an leader in the fishing community" replaced by "You are a fisherman in the fishing community". Preserve the original constant behind the disabled override. In study runs, additionally apply the common B2 paper prompt alignment, including SVO confidentiality, corrected category bounds and sentence separation. Use the fisherman version for this focal persona only.
 - Set that persona's `PersonaIdentity.goals` to `"\n\n" + VALUES_AGENDA` (B5) via the condition's YAML under `personas`. `get_sytem_prompt_v3` appends goals with no separator, hence the two leading newlines. Do this in config, not code.
 - The focal persona must not be added to `leader_candidates`, and no policy or election phase may run.
 
@@ -355,6 +370,7 @@ Never call the global `random` or `np.random` in new code. Every new draw uses `
 |---|---|
 | Opener, cycle c | `f"opener|{seed}|{c}"` |
 | Values SVO angle | `f"svo|{seed}"`, `uniform(22.45, 57.15)` |
+| Other paper-aligned SVO categories, if used | `f"paper_svo|{seed}|{slot}|{category}"`; paper ranges in B2. This does not add leaders or altruistic agents to study conditions |
 | Stakes initial schedule (x and the shuffle) | `f"stakes|{seed}"` |
 | Stakes successor horizon, slot s, cycle c | `f"successor|{seed}|{s}|{c}"`, `randint(3, 8)` |
 
@@ -398,10 +414,10 @@ N-agent conditions use the first N names. Stakes successors take the next unused
 Build a deterministic **stub LLM** that returns canned, parseable outputs for every call type (harvests, utterances with nominations, elicitation, perceived leadership, summaries, reflections), so every condition runs end to end at no cost.
 
 **Nothing else changed**
-- With all intervention flags and the study token-cap override off, rendered prompts and captured API request payloads match the original commit byte for byte at a fixed game state. With the study override on, allow only the B2 max-token change in otherwise matching requests; verify 16,000 for generation/find calls and 1,000 for fresh importance ratings in every condition.
-- Golden prompt diffs for every prompt type and condition against the original commit, saved to `tests/golden/`. Allowed differences only: the common B2 token-cap override; B3 changes; values text for the focal agent; tags and instruction in stakes; scaled numbers and names at N=16 and 32.
+- With all intervention flags and the common paper/cap overrides off, rendered prompts and captured API request payloads match the original commit byte for byte at a fixed game state. With the study overrides on, allow only B2's listed cap, recall and prompt differences in otherwise matching requests; verify 16,000 for generation/find calls and 1,000 for fresh importance ratings in every condition.
+- Golden prompt diffs for every prompt type and condition against the original commit, saved to `tests/golden/`. Allowed differences only: the common B2 paper/cap overrides; B3 changes; values text for the focal agent; tags and instruction in stakes; scaled numbers and names at N=16 and 32.
 - Calls per phase per cycle equal the original's plus elicitation and perceived-leadership calls where flagged.
-- With N=8, the parameterized system prompt renders the original text byte for byte.
+- With N=8 and the common paper-text override off, the parameterized system prompt renders the original text byte for byte. With the override on, allow only the documented B2 general-task correction.
 - Each new YAML differs from the original only in permitted fields.
 
 **Mechanics**
@@ -414,7 +430,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 **Information isolation** (scan every logged prompt from stub runs)
 - Values text and SVO text appear only in the focal agent's prompts.
 - Game length never appears: no "6 cycles", "six months", or final-month references.
-- Mayor and truthfulness lines appear only in the replica.
+- The mayor line appears only in the replica. Old agenda-crafting truthfulness text is absent from all paper-aligned runs; the new honesty instruction is common to strategic prompts in every arm. SVO confidentiality appears only with the focal agent's SVO text.
 - No condition registers a leader candidate or runs a policy or election phase.
 - Stakes: every system-generated name (report lines, speaker labels, participant and nominee lists, "You are NAME") carries its current tag, and free text is never rewritten; no tag shows anything but months remaining; the instruction is in every agent's system prompt, successors included; successors start with empty memory; leavers are never called again.
 - Elicitation and perceived-leadership calls leave memory identical to runs without them.
@@ -431,7 +447,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 2. Add, don't edit: implement each change as a guarded branch, leaving the original code path to run verbatim when its flag is off.
 3. Never run formatters, linters, or auto-fixers on existing files.
 4. Don't fix original bugs or quirks unless this document names them. Record each in `QUIRKS.md` with file and line.
-5. Leave untouched: memory retrieval and storage, reflection and summary prompts, parsing regexes, agreed-limit extraction, sampling parameters other than the explicit B2 token-cap override, the model wrapper's retry behavior, and phase order. Apply the common cap through a study-only override; preserve the original wrapper defaults and the original path when that override is disabled.
+5. Leave untouched: original memory scoring and storage, reflection and summary task prompts apart from B2's common general-system text, parsing regexes, agreed-limit extraction, sampling parameters other than the explicit B2 token-cap and altruistic-range overrides, the model wrapper's retry behavior, and phase order. Apply the common cap through a study-only override; preserve the original wrapper defaults and the original path when that override is disabled.
 6. Logging only observes requests and responses: no added messages, changed parameters, or reordering.
 7. One commit per item in this document, with the section number in the message.
 8. `CHANGES.md` maps every hunk of `git diff 8cf0aba` to a section of this document. Revert any hunk that maps to none.
@@ -443,7 +459,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 **Who runs what.** You run stub tests and the one-cycle Flash-Lite smoke tests yourself. Every full run on Gemini 2.5 Flash (the pilot, the replica seeds, and every wave) is started by me, from tmux on the remote machine, using the launcher command you give me. After I start a run, you monitor it by reading its logs and do the checks and reports below.
 
 
-1. **Smoke test** on `google/gemini-2.5-flash-lite`: one cycle of every condition, seed 0. Fix what breaks. Run `check_data.py` (below) on each. Following the approved token-cap amendment, rerun all six condition smokes with the common 16,000/1,000 caps before the full pilot. Preserve all earlier 8,000-token attempts and include their spending in the project ledger.
+1. **Smoke test** on `google/gemini-2.5-flash-lite`: one cycle of every condition, seed 0. Fix what breaks. Run `check_data.py` (below) on each. Following the approved paper-alignment amendments, rerun all six condition smokes with the common paper definitions, prompts and 16,000/1,000 caps before the full pilot. Preserve all earlier 8,000-token attempts and include their spending in the project ledger.
 2. **Replica pilot:** replica, seed 0, on `google/gemini-2.5-flash`. Report: tokens, cost, wall-clock time, cached-token share, mean reasoning tokens per call, calls ending on the length limit (must be 0; if any, STOP), parse-failure rates for harvests and nominees (flag above 3%), and logged spend reconciled with the OpenRouter balance change (within 5%). Write one full cycle of prompts and responses to `pilot_transcript.md`. Include `CHANGES.md`, `FIDELITY.md`, `QUIRKS.md`, all test results, the storage-size estimate, and a cost projection for all 30 runs. **STOP.**
 3. **Replica seeds 1–4.** Then write `REPLICA_CHECK.md`: the A11 comparison, computed with AgentElect's own analysis code in `simulation/analysis/` where it exists (state exactly how any metric is reconstructed), with mean and standard error over our 5 seeds, per-run survival time, final stock, and mean regen factor, and flags as defined in A11. **STOP.**
 4. **Re-project cost** from the five replica runs. Never start a wave projected to push total spend past $90; STOP and ask instead.
@@ -472,10 +488,16 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 | Item | Paper | Code at `8cf0aba` | Resolution |
 |---|---|---|---|
 | Max output tokens | At least 16K; exact integer unspecified | Generation/find defaults are 8000; fresh importance selections use 1000 | User approved a 16,000-token study override for generation/find and private instrument calls across every condition, including replica, while retaining fresh importance ratings at 1000. Preserve original wrapper defaults behind the disabled override. Rerun all six smokes, retain prior attempts/costs, and STOP for review if the pilot still truncates |
-| Truthfulness prompt | "Be honest and explicit about your reasoning…" | Agenda-crafting text beginning "As a leader, you will now craft your policy agenda" | Follow the code in the replica; dropped elsewhere (B3) |
-| SVO secrecy line | "Do not reveal your SVO angle…" | No such line | Follow the code; add none (B4.3) |
+| Truthfulness prompt | "Be honest and explicit about your reasoning…" | Agenda-crafting text beginning "As a leader, you will now craft your policy agenda" | Use common paper-aligned honesty/deception semantics in every arm; preserve original behavior when overrides are off |
+| SVO secrecy line | "Do not reveal your SVO angle…" | No such line | Add paper-aligned SVO confidentiality under the common override; keep it private to the SVO agent |
 | SVO prompt typo | n/a | "You are an leader" | Replaced only in the values arm's fisherman version (B4.3) |
-| Truthfulness for voters | Described as global | Voters always get the honest version | No action; noted in A6 |
+| Truthfulness for voters | Described as global | Voters always get the honest version | Use the common paper truthfulness setting for all strategic agents under the override; current runs are honest |
+
+| Sustainability threshold | Full-capacity target equation | Floored current-stock target | Use the paper equation without an added floor (B2) |
+| Degree / betweenness | Incoming degree; directed inverse-distance fractional paths | Both endpoints; undirected selected unweighted paths | Use paper definitions for study measures and their nulls; preserve original analysis for labeled legacy checks |
+| Recall | Ten entries | Five in conversation | Request ten under B2; retain scoring/filtering/deduplication |
+| Altruistic angles | 57.15–90 | 57.15–75 | Use keyed study-only paper range; current prosocial design unchanged |
+| General/SVO text | Stochastic growth; privacy and consistent SVO text | Extra doubling claim, no privacy, duplicate SVO prose | Apply only the listed B2 paper-aligned prompt corrections |
 
 ## B15. Running under Codex
 
