@@ -8,11 +8,12 @@ from simulation.utils.models import ModelWandbWrapper
 
 
 class StubModel(ModelAPI):
-    def __init__(self, seed=0, turns=3, catch=2):
+    def __init__(self, seed=0, turns=3, catch=2, nomination_style="tagged"):
         super().__init__("google/gemini-2.5-flash", seed)
         self.requests = []
         self.turns = turns
         self.catch = catch
+        self.nomination_style = nomination_style
 
     def request_api(self, chat, temperature, top_p, max_tokens):
         prompt = "\n".join(message["content"] for message in chat)
@@ -29,6 +30,12 @@ class StubModel(ModelAPI):
             speaker = re.search(r"You are ([A-Za-z]+)", prompt).group(1)
             bare_names = [name.split(" [", 1)[0] for name in names]
             next_name = names[(bare_names.index(speaker) + 1) % len(names)]
+            if self.nomination_style != "tagged":
+                next_name = next_name.split(" [", 1)[0]
+                if self.nomination_style == "lowercase":
+                    next_name = next_name.lower()
+                elif self.nomination_style == "partial":
+                    next_name = next_name[:3]
             transcript = prompt.rsplit("\nConversation so far:\n", 1)[1].split("\n\nTask:", 1)[0]
             previous_turns = len(re.findall(r"^-(?:" + "|".join(bare_names) + r")(?: \[.*?\])?:", transcript, re.M))
             ending = "yes" if previous_turns + 1 >= self.turns else "no"

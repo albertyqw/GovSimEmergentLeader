@@ -121,24 +121,45 @@ def prompt_converse_utterance_in_group(
 
     if utterance_ended:
       next_speaker = None
+      init_persona.last_nominee_raw = None
     else:
       lm += "\n"
       lm += next_speaker
       options = [
           cognition_utils.render_name(t.identity) for t in target_personas
       ]
-      lm = model.select(
-          lm,
-          name="next_speaker",
-          options=options,
-          default_value=options[0],
-          chain=chain,
-      )
-      assert lm["next_speaker"] in options
-      next_speaker = lm["next_speaker"]
       if getattr(init_persona.identity, "stakes_months_remaining", None) is not None:
-        from simulation.measurement_prompts import strip_stakes_tag
-        next_speaker = strip_stakes_tag(next_speaker)
+        from simulation.measurement_prompts import resolve_name
+        raw_nominee = lm.text_to_consume.strip()
+        if raw_nominee:
+          raw_nominee = raw_nominee.splitlines()[0]
+          lm += raw_nominee
+        else:
+          lm = model.gen(lm, name="next_speaker_text", default_value="",
+                         stop_regex=r"\Z", chain=chain)
+          raw_nominee = (lm["next_speaker_text"] or "").strip().splitlines()
+          raw_nominee = raw_nominee[0] if raw_nominee else ""
+        bare_options = [t.identity.name for t in target_personas]
+        resolved = resolve_name(raw_nominee, bare_options)
+        failed = resolved not in bare_options
+        next_speaker = bare_options[0] if failed else resolved
+        lm = lm.set("next_speaker", next_speaker)
+        recorder = getattr(model, "recorder", None)
+        if recorder is not None:
+          recorder.parse_result("next_speaker", next_speaker,
+                                error="Unresolved nomination" if failed else None)
+        init_persona.last_nominee_raw = raw_nominee
+      else:
+        lm = model.select(
+            lm,
+            name="next_speaker",
+            options=options,
+            default_value=options[0],
+            chain=chain,
+        )
+        assert lm["next_speaker"] in options
+        next_speaker = lm["next_speaker"]
+        init_persona.last_nominee_raw = next_speaker
 
     response_log_path = os.path.join(
         init_persona.experiment_storage,

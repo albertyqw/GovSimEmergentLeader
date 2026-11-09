@@ -182,9 +182,12 @@ class ConverseComponent(component.Component):
           "speaker_identity": current_persona.identity.name,
           "slot": int(current_persona.agent_id.split("_")[-1]),
           "rendered_tag": render_name(current_persona.identity),
-          "text": utterance, "nominee_raw": observed_turn.get("nominee_raw", next_name),
+          "text": utterance, "nominee_raw": (observed_turn.get("nominee_raw") or
+              getattr(current_persona, "last_nominee_raw", next_name)),
           "nominee_resolved": next_name, "end_conversation": end_conversation,
           "call_ids": observed_turn.get("call_ids", []),
+          "nominee_options": [] if end_conversation else [p.identity.name for p in target_personas],
+          "nominee_options_rendered": [] if end_conversation else [render_name(p.identity) for p in target_personas],
       })
 
       current_conversation.append(

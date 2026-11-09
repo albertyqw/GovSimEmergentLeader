@@ -81,13 +81,19 @@ def measure(model, persona, participants, location, time, context, report, kind,
     with user():
         lm += text
     with assistant():
-        lm = model.gen(lm, name="measurement_response", default_value="", chain=chain)
+        lm = model.gen(lm, name="measurement_response", default_value="", stop_regex=r"\Z", chain=chain)
         raw = lm["measurement_response"]
-    model.end_chain(persona.identity.name, lm, chain=chain)
     if kind == "elicitation":
-        return parse_elicitation(raw, final_month=final_month)
-    match = re.search(r"^\s*ANSWER\s*:\s*(.+?)\s*$", raw, re.I | re.M)
-    answer = match.group(1) if match else raw
-    resolved = resolve_name(answer, [p.identity.name for p in participants])
-    return {"raw": raw, "answer": answer, "resolved_identity": resolved,
-            "parse_status": "failed" if resolved == "unresolved" else "ok"}
+        result = parse_elicitation(raw, final_month=final_month)
+    else:
+        match = re.search(r"^\s*ANSWER\s*:\s*(.+?)\s*$", raw, re.I | re.M)
+        answer = match.group(1) if match else raw
+        resolved = resolve_name(answer, [p.identity.name for p in participants])
+        result = {"raw": raw, "answer": answer, "resolved_identity": resolved,
+                  "parse_status": "failed" if resolved == "unresolved" else "ok"}
+    if hasattr(model, "recorder"):
+        model.recorder.parse_result(kind, result)
+        if result["parse_status"] == "failed":
+            model.recorder.parse_result(kind, error="Private instrument parse failed")
+    model.end_chain(persona.identity.name, lm, chain=chain)
+    return result
