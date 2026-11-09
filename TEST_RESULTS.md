@@ -40,3 +40,7 @@ Public-report oversubscription is also tested: 160 tons requested against a 100-
 ## Current paid-smoke stop
 
 On the final true-catch paper profile (314aa61), the N32 Flash-Lite smoke hit the 16000 cap once on Yusuf's harvest response (15893 reported output tokens, no Answer marker). The guard halted with no pending reservations. Earlier paper-profile replica/baseline smokes were superseded by the true-catch correction. All attempts are preserved, total spending is $0.30192999, and no full Flash run has started. See SMOKE_REPORT.md for the review decision.
+
+## Current fixed-cap policy verification
+
+All 41 tests pass. Three fake-SDK cases run the real original adapter/parser behind study logging: a parseable answer in a length response, a same-cap next-stage request that succeeds, and an original zero fallback when number parsing fails. All calls retain 16000, each length event is recorded, the zero fallback is explicitly labeled, and the shared budget remains active with actual fixture costs settled. These are local tests, not paid requests. Amended-policy smokes now resume in fresh attempt directories.

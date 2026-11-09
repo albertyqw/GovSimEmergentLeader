@@ -1,3 +1,9 @@
+# Current policy update
+
+The user approved continuing at fixed caps using repository parser behavior. Length finishes and individual parse failures are now logged rather than causing the prior study-wide stop. Original parser follow-up calls/defaults are unchanged, including explicit logging of zero fallbacks. All 41 tests pass. The historical stops below remain preserved evidence; fresh-policy smoke validation is in progress. No long Flash run has started.
+
+---
+
 # Current status: paper-first smoke stopped at 16,000 tokens
 
 All 40 offline tests pass, including six-cycle native stubs for every condition, current prompt isolation, exact inverse-path ties, actual public reports under oversubscription, and disabled-override request fidelity. No long Flash run has started and no `final-runs` tag has been created.

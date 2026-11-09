@@ -117,3 +117,11 @@ No original reflection regex, retrieval scores, allocation algorithm, regenerati
 - B11/B14 review report: update SMOKE_REPORT.md and TEST_RESULTS.md with the final-profile N32 16000-token stop, preserved superseded attempts, parse-fallback flag and reconciled $0.30192999 total. Keep the halt and caps unchanged; no full run or pilot tag is created.
 
 - B10/B14 fixed-cap review: document the original adapter's discarded finish reason, incidental parser continuation and zero fallback in SETUP_AUDIT.md / QUIRKS.md, and clarify the current smoke report. Three local fake-SDK cases used the unchanged original path at 8000 tokens per request; no model call or runtime-policy change occurred. Study caps remain 16000/1000.
+
+## User-approved repository truncation behavior at fixed caps
+
+- B2/B11/B12/B14: update METHODS.md and parent copy to keep 16000/1000 caps fixed, continue original parsing after length/parse failures, retain the native follow-up/default behavior, and preserve scheduled review and financial halts. No new truncation retry or prompt is added.
+- `simulation/openrouter_handling.py`: replace only the added length halt with a logged type=length event, preserving raw response return, cost settlement and other error/routing safeguards.
+- `simulation/recording.py`: record truncated flag, policy metadata and observed fallback values without changing returned parser results. `check_data.py`: accept length finishes, summarize length/parse/fallback counts. `run_study.py`: do not reuse prior-policy completions.
+- `tests/test_truncation_behavior.py` (new): exercise unchanged adapter/parser with a local SDK double across all three continuation/fallback cases and verify fixed caps, billed-call counting, no halt, raw length evidence and labeled zero defaults.
+- DATA.md / RUNBOOK.md / SETUP_AUDIT.md / QUIRKS.md / TEST_RESULTS.md / SMOKE_REPORT.md: distinguish the authorized continuing policy from historical length-stop attempts. All original raw attempts and costs remain preserved.

@@ -60,3 +60,9 @@ Paper degree counts weighted incoming references. Betweenness sums fractional cr
 Paper threshold is `max((stock * factor - capacity)/(N * factor),0)` without flooring. Harvest allocation and native integer regeneration are unchanged. Over-usage uses the logged paper threshold. Conversation and private instruments request ten memories; filtering/deduplication can return fewer. SVO confidentiality and general-system corrections are common profile behavior; all current strategic prompts receive honesty instructions.
 
 The paper-aligned public report now renders actual allocations; requested catches remain separately recorded and in native harvest statistics. Historical original-code reports rendered requests. The checker verifies public report lines against actual catches for the amended profile.
+
+## Fixed-cap continuation policy
+
+Current run metadata records `truncation_policy: repository_parser_fixed_caps`. Every returned call records `truncated` alongside its original finish_reason. A length finish also appends a type=`length` event to errors.jsonl.gz with its cap, generation ID and resolution=`continued_repository_parser`. It does not trigger a retry or global halt. The original parser may make a later request as part of its normal flow; that is a distinct logged/billed call at the same per-call cap, not an HTTP retry.
+
+Failed parse operations retain status/error and, where the original wrapper returns a default, `fallback_applied` and `fallback_value`; parsed_output records that effective wrapper result. This distinguishes an original zero fallback from a successful zero answer. Checks report truncation_count, parse_failure_operations, fallback_operations and existing per-instrument/harvest/nominee rates without rejecting a run solely for truncation or an individual parse failure. Scheduled review gates and financial/routing safeguards remain active. All continuation costs count toward $90.

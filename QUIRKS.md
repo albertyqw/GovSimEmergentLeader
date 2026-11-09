@@ -105,3 +105,5 @@ The paper-first hierarchy also supersedes the prior requested-catch reporting ch
 - `pathfinder/pathfinder/api.py:207-235` returns only OpenRouter message content; it does not check length finishes. Its explicit adapter retry covers rate-limit errors, not token exhaustion.
 - General generation/parser flow can consume a parseable answer from partial text or make another request after exhausting the buffer. There is no length-specific bounded retry policy.
 - Harvest number parsing falls back to zero if its search fails (`act_prompts.py:76-93`; wrapper `find` exception handler). Local fake-SDK cases confirmed these branches without model calls. This is observed original behavior, not an authorized change to the study's current halt policy.
+
+The user has now authorized retaining that original fixed-cap parser behavior for the study, with explicit truncation and fallback logging. This supersedes the earlier added stop-on-length safeguard; original parser code remains unchanged.

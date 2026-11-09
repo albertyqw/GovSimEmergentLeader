@@ -40,8 +40,10 @@ Repeat a reviewed launcher command after a crash. Validated completed seeds are 
 .venv/analysis/bin/python -m tools.build_derived runs --output derived
 ```
 
-Raw directories are write-once. Checks, manifests, reports and Parquet stay outside them. Derived builds select validated full runs; `--include-testing` is only for tool verification. Paid judging and embedding analyses remain deferred. A STOP, length-limit finish, credit/budget failure or unreconciled billing requires review; preserve all evidence.
+Raw directories are write-once. Checks, manifests, reports and Parquet stay outside them. Derived builds select validated full runs; `--include-testing` is only for tool verification. Paid judging and embedding analyses remain deferred. Scheduled STOP gates, credit/budget failures and unreconciled billing require review. Length finishes and individual parse failures are logged and follow repository continuation/default behavior at fixed caps; preserve all evidence.
 
 ## Current paper-alignment profile
 
 The amended study uses paper-defined thresholds, incoming degree, inverse-weight fractional betweenness, ten-entry recall, altruistic range 57.15–90 (if ever used), aligned prompt semantics and 16000/1000 generation/rating caps. All six smokes must be repeated under this profile. The worker compares resolved config before reusing a completion; older validated attempts cannot satisfy the new profile and are preserved in place. Do not clear an unrelated budget/credit halt when reviewing the old length-limit halt. No full Flash run has started.
+
+Current truncation policy is repository_parser_fixed_caps. Old-policy completions are preserved but do not satisfy new-policy resume checks. Do not increase caps or add length-triggered retry loops. Report all truncations, subsequent calls and parse fallbacks at pilot review.
