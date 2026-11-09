@@ -1,9 +1,41 @@
-# Two-stage profile: fresh smokes pending
+# Two-stage discussion smoke validation complete
 
-The current protocol guarantees an opening turn for all present agents, allows nomination from the final opening turn onward, resolves invalid nominations with a hidden contextual judge and then random if unclear, and retains 50 total messages. Every judge intervention is logged separately and billed in the shared ledger. All prior attempts are preserved and superseded for this profile. Project spending before new smokes is $1.03935069. No full replacement pilot has started.
+All six seed-0 one-cycle Flash-Lite smokes passed check_data.py with 1000 null replicates on `036c30cd6d358224a184804f09faa0fa76ecc91a`. Every start/end commit matches, and `round_robin_discussion` is true. All earlier attempts remain preserved and superseded. No full v3 pilot has started.
+
+| Condition | Attempt | Opening turns | Nomination turns | Calls | Seconds | Final stock | Cost USD | Length | 429 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| replica_N8 | seed0_attempt6 | 8 | 5 | 116 | 105.2 | 100 | 0.02594621 | 0 | 9 |
+| baseline_N8 | seed0_attempt6 | 8 | 5 | 132 | 106.8 | 100 | 0.02512617 | 0 | 0 |
+| values_N8 | seed0_attempt4 | 8 | 3 | 131 | 117.8 | 100 | 0.03289825 | 0 | 0 |
+| stakes_N8 | seed0_attempt4 | 8 | 4 | 135 | 115.8 | 98 | 0.03416350 | 0 | 2 |
+| coord_N16 | seed0_attempt4 | 16 | 2 | 243 | 197.5 | 198 | 0.06351440 | 0 | 2 |
+| coord_N32 | seed0_attempt5 | 32 | 4 | 516 | 413.2 | 0 | 0.18227783 | 2 | 14 |
+
+## Coverage, handoff and hidden judge
+
+Every present agent spoke exactly once in the opening round, in the keyed household-slot order. Early opening nominations and conclusion requests were disabled. The final opening speaker nominated the first nomination-phase speaker. Both phases plus the report stayed within 50 messages. Phase-specific airtime, silence, graph measures, routing-source counts and matching nulls were computed successfully.
+
+All harvest decisions and all actual nominations parsed successfully. Applicable private instruments parsed at 100%. **No live invalid nominations occurred**, so the per-run intervention logs and shared running table contain zero events for these smokes; no paid judge call was needed. Do not interpret that as a paid test of judge judgment quality.
+
+The 47-test offline suite forced invalid nominations and verified intended/contextual choices (including an Everyone nomination), unclear/malformed/ineligible random fallback, one separate judge call per intervention, fixed caps, correct table/call/turn links, append-only rows and complete exclusion of judge prompts/reasons from later agent requests and memories. Original disabled-path API payloads remain byte-identical to pinned code.
+
+The separate paid-event running table is `runs/.control/nomination_judgments.sqlite` (`nomination_judgments` table). Its readable snapshot is `runs/nomination_judgments.tsv`, refreshed with `.venv/bin/python -m tools.nomination_table`. It currently has headers and zero event rows. Future invalid nominations append automatically to the SQLite table and per-run `nomination_judgments.jsonl.gz`.
+
+## Preserved outcomes and transport events
+
+Five smokes survived one cycle. N32 collapsed after oversubscribed harvest. It had two harvest length finishes; partial responses and the existing numeric-parser result remain preserved at 16000 tokens per request, with no new truncation retry or cap increase. The hidden nomination judge is not used to reinterpret harvest decisions. Reflection/evidence parse quirks remain logged and unchanged.
+
+There were 25 recorded 429 events (handled) and zero 402 events. Lower smoke parallelism reduced the earlier burst. The user-started replacement pilot is a single seed.
+
+## Cost, source and handoff
+
+New six-smoke spending: **$0.36392636** across 1273 calls. Tokens: 1895823 input, 463676 output, 123626 cached, zero reported reasoning. All token counters were available. Cumulative project ledger and account usage both equal **$1.40327705**; balance and limit_remaining are **$98.59672295**, key limit $100. The $100 initial balance minus current balance agrees exactly to reported precision. Pending reservations are zero; no halt is set and the $90 guard remains active. All superseded pilot/smoke/failed/retry spending is included.
+
+Freeze the documentation-complete source under `final-runs-v3`, preserving both old tags. The user starts only `./launch.sh replica_N8 0` from the govsim tmux shell. The changed resolved config allocates a fresh full attempt; the old full pilot remains intact. Codex monitors, writes a new B11.2 pilot report/transcript with new cost/storage projections, and **STOPs**. No further seeds start before that review.
 
 ---
 
+# Preserved historical smoke reports
 # Neutral study smoke validation complete
 
 All six seed-0, one-cycle Flash-Lite smokes passed `check_data.py` with 1000 null replicates on source commit `499f8d2`. Every run records the same start/end commit, `neutral_study: true`, correct participant counts, common paper settings, and fixed 16000/1000 caps. The initial full pilot and all earlier attempts remain preserved and superseded. No replacement full Flash pilot has started.

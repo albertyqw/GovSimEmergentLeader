@@ -1,6 +1,6 @@
 # Current two-stage source amendment
 
-The user approved a mandatory opening round, nomination handoff by its final speaker, a hidden contextual nomination judge, random fallback when unclear, a separate running intervention table, and 50 messages total. All study configs require `round_robin_discussion: true`. Earlier smoke/pilot versions are preserved and superseded. Repeat six one-cycle smokes before the user starts the replacement pilot; retain final-runs and final-runs-v2 and freeze the replacement as final-runs-v3. Never launch a full run from Codex.
+The user approved a mandatory opening round, nomination handoff by its final speaker, a hidden contextual nomination judge, random fallback when unclear, a separate running intervention table, and 50 messages total. All study configs require `round_robin_discussion: true`. Earlier smoke/pilot versions are preserved and superseded. All six two-stage smokes validated on 036c30c; the user starts the replacement pilot after the final tag is pushed; retain final-runs and final-runs-v2 and freeze the replacement as final-runs-v3. Never launch a full run from Codex.
 
 The shared judge table is `runs/.control/nomination_judgments.sqlite`. Export a readable snapshot with `.venv/bin/python -m tools.nomination_table`; the default destination is `runs/nomination_judgments.tsv`. Judge calls appear in the ordinary raw calls and cost ledger.
 

@@ -154,3 +154,5 @@ No original reflection regex, retrieval scores, allocation algorithm, regenerati
 - `study_analysis.py`, `check_data.py`: measure each phase separately, preserve mandatory turns in the null, redraw the initial nomination handoff, validate coverage/cap/routing/intervention call links, and report judge/random counts.
 - Twelve-constant/config/legacy-profile tests, new `test_two_stage_discussion.py`, stub transport and fidelity generator/golden fixtures: verify opening coverage, cap, valid bypass, judge context/intent choices, random fallback, privacy, table append behavior and disabled-path byte fidelity.
 - DATA.md / RUNBOOK.md / QUIRKS.md / TEST_RESULTS.md / SMOKE_REPORT.md describe protocol version, limits, new schemas and preserved historical evidence.
+
+- B8/B10/B11: document all six validated two-stage smokes, 47 passing tests and original-path fidelity, initialized empty running intervention table, preserved N32 harvest truncations/collapse, handled 429s and exact $1.40327705 ledger/account reconciliation. Freeze v3 for a user-started replacement pilot; implementation stays identical to the paid-smoke source.
