@@ -176,3 +176,29 @@ The user resolved the source hierarchy in favor of paper definitions for all fiv
 Verification: 39 tests pass; six recorded six-cycle stub workers validate at zero API cost. Threshold boundary/scaling, altruistic bounds/key isolation, incoming direction, inverse weights and fractional tied-path credit are tested. Captured requests verify 16000 generation and 1000 fresh ratings in every arm. A separate disabled-override request fixture remains byte-identical to the pinned source after only the approved constructor repair. The six study fixtures now intentionally differ by the disclosed common paper overrides and arm manipulations.
 
 Paper-first completeness check: the publication explicitly describes true catches. The common report source now uses allocated catches, while original native requested-catch logs are preserved. A new oversubscription test verifies both quantities and public lines. The first two amended smokes exposed no truncation but still used requested-catch reports under oversubscription; both are superseded and rerun. Replica nomination fallback was 14.3% in that superseded Flash-Lite attempt; the original parser is preserved and this is flagged for pilot review.
+
+
+## Fixed-cap truncation handling audit
+
+The user clarified that caps remain fixed; the issue is how to handle a capped response. No runtime behavior changed during this audit and no paid request was made.
+
+The [paper §4.1](https://arxiv.org/html/2604.11721v2#S4.SS1) reports an output ceiling of at least 16K and states that this was sufficient. No truncation-recovery or retry policy was found in the paper. It does not establish that larger caps or any particular recovery scheme were used.
+
+Pinned-source behavior:
+
+- `pathfinder/pathfinder/api.py:207-235`: OpenRouter forwards `max_tokens`, retries rate-limit exceptions, and returns only message content. It does not inspect or preserve `finish_reason`.
+- `api.py:125-176`: generation without its expected marker returns the text it received. If that leaves no buffered text, the following parser operation can issue a new API request using the accumulated partial assistant message. This is normal parser flow, not an explicit length-triggered retry or a reliable guarantee of provider-supported continuation.
+- `simulation/persona/cognition/act_prompts.py:76-93`: harvesting generates reasoning through an Answer marker and then searches for an integer. A failed number search defaults to zero through the original wrapper.
+- `simulation/utils/models.py`: parsing/generation exceptions are caught and defaults returned. There is no original project-wide halt or cap-increase policy tied to finish_reason=length.
+
+A local fake SDK exercised the unchanged OpenRouter adapter, wrapper and parser, with the first SDK response labeled length. No network/model was used:
+
+| Case | SDK calls | Original parsed catch | Requested caps |
+|---|---:|---:|---|
+| Capped text already contains Answer: 7 | 1 | 7 | 8000 |
+| No answer; subsequent parser call returns Answer: 6 | 2 | 6 | 8000, 8000 |
+| No answer in either completion | 2 | 0, with warning | 8000, 8000 |
+
+The fake SDK establishes code control flow, not whether Google AI Studio will accept or complete the assistant-prefill request. A cap is per request: a second request can spend additional tokens without increasing the per-request ceiling.
+
+Our added stop-on-length guard is stricter than the repository and is motivated by the current B11/B14 zero-truncation review requirement. Fixed-cap choices include retaining that halt, explicitly following legacy parser continuation/default behavior, or approving a bounded continuation/failure protocol. A zero fallback must be distinguished from a genuine agent choice in reporting. Any protocol change should be common across conditions and preserve raw attempts, finish reasons, extra calls and costs. Caps remain 16000 for study generation and 1000 for fresh importance ratings while this decision is reviewed.

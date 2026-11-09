@@ -18,7 +18,7 @@ The largest group was then tested first on the final paper-first profile, to che
 | Response size | 49037 characters; no final Answer marker |
 | Attempt cost | $0.02443260 |
 
-This was a Flash-Lite smoke, not the study's intended Gemini 2.5 Flash model. It does not establish whether the production model would also truncate. The current cap and halt remain unchanged pending user review. A possible diagnostic is a separately authorized **one-cycle** N32 Flash check at the same cap; this would not start the six-cycle long run. Raising the cap is a separate common-methods decision.
+This was a Flash-Lite smoke, not the study's intended Gemini 2.5 Flash model. It does not establish whether the production model would also truncate. The current cap and halt remain unchanged pending user review. A possible diagnostic is a separately authorized **one-cycle** N32 Flash check at the same cap; this would not start the six-cycle long run. The user subsequently clarified that caps stay fixed; the remaining decision is truncation handling, not another cap increase. See SETUP_AUDIT.md for original-repository continuation/default behavior.
 
 Total project spending is **$0.30192999**, including all failed, interrupted and superseded attempts. Outstanding reservations are **$0.00**. Account balance and limit_remaining are **$99.69807001**, the key limit is **$100**, and reported usage is **$0.30192999**, matching the ledger. All raw data is preserved. Remaining smokes and the long pilot have not been started under this final profile.
 
