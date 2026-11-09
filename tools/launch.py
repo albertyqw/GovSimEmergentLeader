@@ -41,11 +41,12 @@ def main():
             parser.error("B11 requires baseline seed 0 alone before the rest")
         if args.condition == "stakes_N8":
             previous = list((root / args.condition).glob("seed*/run_meta.json"))
-            if not previous and len(args.seeds) != 1:
-                parser.error("Launch the first stakes seed alone so its early-collapse gate protects later seeds")
             previous_meta = sorted((json.loads(file.read_text()) for file in previous), key=lambda run: run["start_time"])
-            if previous_meta:
-                first = previous_meta[0]
+            finished = [run for run in previous_meta if run["status"] in ("completed", "collapsed")]
+            if not finished and len(args.seeds) != 1:
+                parser.error("Launch the first stakes seed alone so its early-collapse gate protects later seeds")
+            if finished:
+                first = finished[0]
                 if first["status"] == "collapsed" and (first["collapse_cycle"] or 99) <= 2:
                     parser.error("The stakes early-collapse STOP gate requires review")
     logs = root / "logs"
