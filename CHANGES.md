@@ -10,6 +10,8 @@ Baseline: `8cf0aba9efe0b4592f395d9a66e6cfff3cec9a26`.
 | `simulation/persona/persona.py`: remove the obsolete constructor parameter and its arguments in the retrieval/storage constructor calls | B1.3 / B10.4, explicit user-authorized exception | Repair initialization signatures without changing retrieval or storage implementations. This is an exception to original-source fidelity, applying to every condition including replica. |
 | `CHANGES.md` (new file) | B10.8 | Map each change to its source requirement or explicit exception. |
 | `SETUP_AUDIT.md` (new file) | B1.1-5 / B10 | Record source behavior, the call inventory, setup checks, validation and unresolved decisions before implementing interventions. |
+| `simulation/interventions.py` (new file) | B5 | Copy all seven exact intervention texts from the unchanged specification. |
+| `tests/test_intervention_texts.py` (new file) | B9 | Compare all seven B5 constants character for character with their fenced specification texts. |
 
 ## Approved interpretations awaiting implementation
 
