@@ -42,3 +42,11 @@ These observations do not authorize changes to original simulation behavior.
 - Locations: `simulation/analysis/social.py:569,593-594` (pinned-source references).
 - The original code uses `nx.from_dict_of_dicts(...)` without a directed graph constructor for betweenness and eigenvector centrality. Degree counts both endpoints; eigenvector centrality does not request weighted edges. A10 describes a directed graph while also referring to this code.
 - Resolution: the user approved directed graphs for the study's A10 metric calculations. Original analysis code remains unchanged.
+
+## B1 / B10: Unpinned Transformers resolution cannot import with pinned PyTorch
+
+- Locations: `requirements.txt:15`; `pathfinder/requirements.txt:3`; `requirements_venv.txt:2,13`; `simulation/persona/embedding_model.py:4` (pinned-source references).
+- The user-selected default requirements leave `transformers` and `sentence_transformers` unpinned. Installation resolved Transformers 5.22.2 and sentence-transformers 6.2.0 while retaining the repository's PyTorch 2.2.0 pin.
+- Installation and `pip check` passed. Importing `simulation.run` failed: Transformers disabled PyTorch because it requires >=2.6, then raised `NameError: name 'nn' is not defined` in `transformers/distributed/pipeline_parallel.py`, reached through the existing sentence-transformers import.
+- No model was instantiated and no paid call was made. Do not upgrade PyTorch or alter source imports to conceal this failure. The repository's alternate requirements file pins Transformers 4.51.0.
+- Status: stopped for approval to constrain otherwise-unpinned dependencies to a compatible set, starting with the repository's Transformers 4.51.0 pin while preserving the default fixed pins.
