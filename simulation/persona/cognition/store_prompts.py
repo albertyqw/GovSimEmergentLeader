@@ -25,7 +25,7 @@ def prompt_importance_chat(
         " 10, where 1 indicates a mundane conversation (e.g., routine morning"
         " greetings) and 10 represents highly impactful discussions (e.g.,"
         " talking about a breakup, a serious argument), rate the significance"
-        f" of the following conversation for {persona.name}."
+        f" of the following conversation for {cognition_utils.render_name(persona)}."
     )
     lm += f"\nConversation to rate:\n{chat.description}\n\n"
 
@@ -62,7 +62,7 @@ def prompt_importance_event(
         " teeth, making the bed) and 10 signifies events of extreme emotional"
         " significance (e.g., a romantic breakup, receiving a college"
         " acceptance letter), evaluate the following event from"
-        f" {persona.name}'s perspective."
+        f" {cognition_utils.render_name(persona)}'s perspective."
     )
     lm += f"\nEvent to rate: {event.description}\n"
 
@@ -100,7 +100,7 @@ def prompt_importance_thought(
         " where 1 indicates routine, everyday thoughts (e.g., needing to do"
         " chores) and 10 signifies thoughts of great importance (e.g., career"
         " aspirations, profound emotions), evaluate the following thought from"
-        f" {persona.name}'s perspective."
+        f" {cognition_utils.render_name(persona)}'s perspective."
     )
     lm += f"\nThought to rate:\n{thought.description}\n\n"
 
@@ -138,7 +138,7 @@ def prompt_importance_action(
         " where 1 denotes routine, everyday actions (e.g., household chores)"
         " and 10 indicates actions of great importance or impact (e.g., career"
         " decisions, expressions of deep emotions), rate the significance of"
-        f" the following action for {persona.name}."
+        f" the following action for {cognition_utils.render_name(persona)}."
     )
     lm += f"\nAction to rate:\n{action.description}\n\n"
 

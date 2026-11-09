@@ -48,7 +48,7 @@ def prompt_converse_utterance_in_group(
     lm += "\n"
     lm += f"Current context: {current_context}\n\n"
     target_names = cognition_utils.list_to_comma_string(
-        [t.identity.name for t in target_personas],
+        [cognition_utils.render_name(t.identity) for t in target_personas],
     )
     lm += (
         f"Scenario: {target_names} are engaged in a group chat."
@@ -125,7 +125,7 @@ def prompt_converse_utterance_in_group(
       lm += "\n"
       lm += next_speaker
       options = [
-          t.identity.name for t in target_personas
+          cognition_utils.render_name(t.identity) for t in target_personas
       ]
       lm = model.select(
           lm,
@@ -136,6 +136,9 @@ def prompt_converse_utterance_in_group(
       )
       assert lm["next_speaker"] in options
       next_speaker = lm["next_speaker"]
+      if getattr(init_persona.identity, "stakes_months_remaining", None) is not None:
+        from simulation.measurement_prompts import strip_stakes_tag
+        next_speaker = strip_stakes_tag(next_speaker)
 
     response_log_path = os.path.join(
         init_persona.experiment_storage,

@@ -28,6 +28,7 @@ from simulation.phases.harvesting import HarvestingPhase
 from simulation.phases.policy_making import PolicyMakingPhase
 from simulation.phases.reflection import ReflectionPhase
 from simulation.utils.models import ModelWandbWrapper
+from simulation.intervention_randomness import values_svo_angle
 
 
 cognition_utils.SYS_VERSION = "v3"
@@ -144,7 +145,14 @@ async def run(
         framework_wrapper,
         os.path.join(experiment_storage, f"persona_{i}"),
         experiment_storage=experiment_storage,
+        **(
+            {"svo_angle": values_svo_angle(cfg.seed), "svo_type": SVOPersonaType.PROSOCIAL}
+            if getattr(cfg.agent, "values_plan", False) and i == cfg.seed % 8
+            else {}
+        ),
     )
+    if getattr(cfg.agent, "values_plan", False) and i == cfg.seed % 8:
+      personas[f"persona_{i}"].focal_values = True
 
   num_personas = cfg.personas.num
   identities = {
@@ -205,6 +213,8 @@ async def run(
     personas[persona].init_persona(
         persona, identities[persona], social_graph=None
     )
+    if hasattr(cfg.agent, "lake_scale"):
+      identities[persona].lake_scale = cfg.agent.lake_scale
   for persona in personas:
     for other_persona in personas:
       personas[persona].add_reference_to_other_persona(
@@ -254,13 +264,31 @@ async def run(
       round_num=env.num_round,
   )
 
+  tenure = None
+  if getattr(cfg.agent, "stakes_tenure", False):
+    from simulation.tenure import TenureState
+    tenure = TenureState(cfg.seed, cfg.env.max_num_rounds)
+    tenure.apply(ctx, 1, framework_wrapper)
+    ctx.tenure = tenure
+
+  recorder = getattr(wrapper, "recorder", None)
+  if recorder is not None:
+    recorder.bind(ctx)
+
   # ── Main simulation loop ──────────────────────────────────────────
 
   while not ctx.terminated:
+    if recorder is not None:
+      recorder.cycle_start(ctx)
     for phase in phases:
+      if recorder is not None:
+        recorder.phase = phase.name
       ctx = await phase.execute(ctx)
       if ctx.terminated:
         break
+
+    if recorder is not None:
+      recorder.cycle_end(ctx)
 
     if not ctx.terminated:
       # Log the completed round's election results.
@@ -288,6 +316,8 @@ async def run(
         )
         ctx.logger.log_game(ctx.election_results[ctx.round_num])
       ctx.round_num = ctx.env.num_round
+      if tenure is not None:
+        tenure.apply(ctx, ctx.round_num + 1, framework_wrapper)
 
   # ── Final logging ─────────────────────────────────────────────────
 
@@ -336,4 +366,6 @@ async def run(
   ctx.env.save_log()
   for persona in ctx.personas:
     ctx.personas[persona].memory.save()
+  if recorder is not None:
+    recorder.finalize()
 

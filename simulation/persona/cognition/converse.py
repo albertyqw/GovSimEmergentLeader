@@ -11,6 +11,8 @@ from simulation.persona.cognition import reflect_prompts
 from simulation.persona.cognition import retrieve as retrieve_mod
 from simulation.interventions import ANNOUNCER_TEMPLATE
 from simulation.intervention_randomness import opener_slot
+from simulation import measurement_prompts
+from simulation.persona.cognition.utils import render_name
 
 
 class ConverseComponent(component.Component):
@@ -47,6 +49,7 @@ class ConverseComponent(component.Component):
     ] = []
 
     html_interactions = []
+    turn_records = []
     if leader_persona:
       current_leader_id = leader_persona.identity
     else:
@@ -114,6 +117,14 @@ class ConverseComponent(component.Component):
 
     max_conversation_steps = self.cfg.max_conversation_steps
 
+    self.measurement_results = {"elicitation": {}, "perceived_leadership": {}}
+    if getattr(self.cfg, "elicitation", False):
+      for participant in target_personas:
+        self.measurement_results["elicitation"][participant.identity.name] = measurement_prompts.measure(
+            self.model, participant, target_personas, current_location,
+            current_time, current_context, harvest_report, "elicitation",
+        )
+
     if leader_persona:
       current_persona = leader_persona
     else:
@@ -164,6 +175,18 @@ class ConverseComponent(component.Component):
       )
       html_interactions.append(h)
 
+      observed_turn = {}
+      if hasattr(self.model, "recorder"):
+        observed_turn = getattr(self.model.recorder, "last_utterance", {}).get(current_persona.identity.name, {})
+      turn_records.append({
+          "speaker_identity": current_persona.identity.name,
+          "slot": int(current_persona.agent_id.split("_")[-1]),
+          "rendered_tag": render_name(current_persona.identity),
+          "text": utterance, "nominee_raw": observed_turn.get("nominee_raw", next_name),
+          "nominee_resolved": next_name, "end_conversation": end_conversation,
+          "call_ids": observed_turn.get("call_ids", []),
+      })
+
       current_conversation.append(
           (current_persona.identity, utterance),
       )
@@ -176,6 +199,14 @@ class ConverseComponent(component.Component):
         break
       else:
         current_persona = self.other_personas[next_name]
+
+    if getattr(self.cfg, "perceived_leadership", False):
+      for participant in target_personas:
+        self.measurement_results["perceived_leadership"][participant.identity.name] = measurement_prompts.measure(
+            self.model, participant, target_personas, current_location,
+            current_time, current_context, harvest_report, "perceived_leadership",
+            conversation=self.conversation_render(current_conversation),
+        )
 
     summary_conversation, h = (
         converse_prompts
@@ -219,6 +250,12 @@ class ConverseComponent(component.Component):
           "CONVERSATION TRANSCRIPT:"
           f" {self.conversation_render(current_conversation)}."
       )
+    self.last_conversation = {
+        "summary": summary_conversation, "agreed_limit": resource_limit,
+        "turns": turn_records, "framework_messages": len(current_conversation) - len(turn_records),
+        "end_reason": "end_conversation" if end_conversation else "cap",
+        "measurements": self.measurement_results,
+    }
     return (
         current_conversation,
         summary_conversation,
@@ -233,4 +270,4 @@ class ConverseComponent(component.Component):
       ],
   ):
     """Render conversation as name-utterance tuples."""
-    return [(p.name, u) for p, u in conversation]
+    return [(render_name(p), u) for p, u in conversation]

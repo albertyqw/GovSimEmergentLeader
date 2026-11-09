@@ -61,6 +61,13 @@ SVO_LEADER_TASK = (
     " (equality). Your SVO is: \n"
 )
 
+SVO_FISHERMAN_TASK = SVO_LEADER_TASK.replace(
+    "You are an leader in the fishing community",
+    "You are a fisherman in the fishing community",
+    1,
+)
+
+
 HONEST_AGENDA_PROMPT = (
     "\nAs a leader, you will now craft your policy agenda."
     " Your agenda should honestly reflect the goals,"
@@ -285,7 +292,7 @@ def make_harvest_report(
   report = "Last round's fishing stats:\n\n"
   for _, persona in personas.items():
     report += (
-        f"\t{persona.identity.name} caught"
+        f"\t{cognition_utils.render_name(persona.identity)} caught"
         f" {last_rounds_harvest_stats[persona.identity.name]}"
         " tons of fish\n"
     )
@@ -445,7 +452,8 @@ def get_leader_persona_prompts(
   """Get leader persona prompts."""
   svo_prompt = ""
   if persona.svo_type != persona_lib.SVOPersonaType.NONE:
-    svo_prompt = SVO_LEADER_TASK + svo_angle_prompt(
+    task = SVO_FISHERMAN_TASK if getattr(persona, "focal_values", False) else SVO_LEADER_TASK
+    svo_prompt = task + svo_angle_prompt(
         svo_angle=persona.svo_angle,
         svo_type=persona.svo_type,
     )

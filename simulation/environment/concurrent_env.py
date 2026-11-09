@@ -468,7 +468,7 @@ class ConcurrentEnv:
                 self.terminations = {
                     agent: (
                         self.internal_global_state["resource_in_pool"]
-                        < 5
+                        < getattr(self.cfg, "collapse_threshold", 5)
                         or self.num_round >= self.cfg.max_num_rounds
                     )
                     for agent in self.agents
