@@ -1,377 +1,282 @@
-# AgentElect: Governance of the Commons Simulation with Elections
+# AgentElect · Emergent Leadership in GovSim
 
-AgentElect extends the [GovSim](https://github.com/giorgiopiatti/GovSim) framework to study how leadership structures affect collective resource management. This project is primarily designed to produce **reproducible results** for comparing three population leadership variants:
+**How do leadership, elections, and communication shape cooperation among LLM agents sharing a renewable resource?**
 
-- **Elected-Leader**: Leaders are chosen through an election process among agents.
-- **Fixed-Leader**: A pre-assigned leader governs the population throughout the simulation.
-- **No-Leader**: Agents self-govern without any designated leadership.
+This is [albertyqw's research fork](https://github.com/albertyqw/GovSimEmergentLeader) of [AgentElect / GovSimElect](https://github.com/rfaulkner/GovSimElect), built on [GovSim](https://github.com/giorgiopiatti/GovSim). The fork is a workspace for investigating emergent leadership and collective resource management in simulated fishing communities.
+
+The current implementation combines configurable simulation phases, leader-candidate populations, optional disinformation, and Markdown-backed agent memory. These mechanisms provide experimental controls for studying leadership and developing new interventions.
 
 ![AgentElect overview](imgs/agent_elect.png)
 
-## Code Setup
+[Setup](#setup) · [Run a simulation](#run-a-simulation) · [Configuration](#configuration) · [Agent memory](#agent-memory) · [Results and analysis](#results-and-analysis) · [Extend the simulation](#extend-the-simulation)
 
-First, clone the repository:
+## What you can study
+
+| Question | Existing controls |
+| --- | --- |
+| Does leadership change cooperation and resource use? | Multiple candidates, a single candidate, or no leader candidates |
+| Does candidate motivation matter? | Social Value Orientation (SVO) population settings |
+| How does misinformation affect collective decisions? | `experiment.env.disinformation` |
+| Does the order of interaction matter? | Configurable policy, election, harvesting, discussion, and reflection phases |
+| How does remembered experience influence behaviour? | Per-agent `MEMORY.md` records and retrieval scores |
+
+With multiple candidates, agents vote on policy agendas. With a single candidate, the election phase selects that candidate without a vote, providing a fixed-leader control. With `leader_population=none`, policy-making and election phases skip leader selection.
+
+## Setup
+
+### Clone this fork
 
 ```bash
-git clone --recurse-submodules https://github.com/rfaulkner/GovSimElect.git
-cd GovSimElect
+git clone https://github.com/albertyqw/GovSimEmergentLeader.git
+cd GovSimEmergentLeader
 ```
 
-### Environment Setup
+PathFinder is included in this checkout. The current `.gitmodules` file is empty, so recursive submodule initialization is not required.
 
-There are two setup scripts depending on your environment:
+### Choose an environment
 
-| Script | Environment | Description |
-|--------|-------------|-------------|
-| `setup.sh` | **Default (Conda)** | Installs dependencies via Conda and pip. Use this for standard local development. |
-| `setup_venv.sh` | **Virtual Environment** | Creates a Python virtual environment (`.venv`) and installs dependencies via pip. Intended for HPC / cluster environments where Conda is unavailable. |
+The setup recipes target a Python **3.11.5** research environment, with Linux/CUDA dependencies for local model inference. They need adaptation to your machine or cluster.
 
-**Default setup (Conda):**
+| Recipe | Intended environment | Before using it |
+| --- | --- | --- |
+| [setup.sh](setup.sh) | Conda with CUDA 12.1 / PyTorch 2.2 | Create and activate the `GovSim` environment first; review its installation commands |
+| [setup_venv.sh](setup_venv.sh) | HPC modules and a `.venv` | Adapt its `module load` versions to your cluster |
+| [setup_vllm.sh](setup_vllm.sh) | A separate Conda/CUDA environment for vLLM | Review GPU compatibility and the `GovComVLLMv2` environment configuration |
+
+For the Conda recipe, start with:
+
 ```bash
-bash ./setup.sh
+conda create -n GovSim python=3.11.5 -y
+conda activate GovSim
 ```
 
-**Virtual environment setup:**
-```bash
-bash ./setup_venv.sh
-source .venv/bin/activate
-```
+Review `setup.sh` before sourcing it in that shell. Its NumPy installation line currently uses `numpy=1.26.4`; pip requires `numpy==1.26.4`.
 
-If you plan to run **open-weight models** locally via [vLLM](https://github.com/vllm-project/vllm), also run:
-```bash
-bash ./setup_vllm.sh
-```
+For an existing compatible Python environment, the dependency lists are [PathFinder requirements](pathfinder/requirements.txt), [project requirements](requirements.txt), and the more extensive [virtual-environment requirements](requirements_venv.txt). API-based inference does not require a locally hosted model, but the imported code still depends on PyTorch and Transformers.
 
-### Environment Variables
+### Configure credentials
 
-Copy the example `.env` file and fill in your API keys as needed:
 ```bash
 cp .env_example .env
 ```
 
-## Running Simulations
+Edit `.env` locally with the credentials for your chosen provider. For the OpenRouter example below, set `OPENROUTER_API_KEY`. The example file also lists OpenAI, Anthropic, Mistral, DeepSeek, and Hugging Face variables; a variable's presence does not mean every provider/model is enabled by the simulation loader.
 
-All launch scripts are located in `scripts/`. They are designed as SLURM job scripts (`sbatch`) but can also be run directly with `bash`.
-
-### Open-Weight Models (Local GPU)
-
-Use `launch_job.sh` to run a simulation with a locally-hosted open-weight model (e.g. via vLLM / HuggingFace Transformers). Requires GPU resources.
+Export those values into the shell before running:
 
 ```bash
-bash scripts/launch_job.sh [seed] [population] [disinformation]
+set -a
+source .env
+set +a
+export PYTHONPATH="$PWD:$PWD/pathfinder${PYTHONPATH:+:$PYTHONPATH}"
 ```
 
-**Arguments:**
+Keep real tokens in `.env` or your environment. The repository ignores `.env`.
 
-| Argument | Default | Options |
-|----------|---------|---------|
-| `seed` | `1` | Any integer |
-| `population` | `balanced` | `balanced`, `none`, `one_prosocial`, `one_altruistic`, `one_competitive`, `one_individualistic`, `lean_altruistic`, `lean_competitive` |
-| `disinformation` | `true` | `true`, `false` |
+## Run a simulation
 
-The model is configured by editing the `model_id` variable inside the script. Supported models include Qwen, Llama-3, and Mistral variants.
+Run from the repository root after preparing your environment. The entry point is [simulation/main.py](simulation/main.py), which loads [config_api.yaml](simulation/conf/config_api.yaml) by default. Explicitly select an experiment: the inherited `basic` default does not have a corresponding experiment file in this checkout.
 
-**Example:**
-```bash
-bash scripts/launch_job.sh 3 none false
-```
+### API-based example
 
-### API-Based Models
-
-Use `launch_job_api.sh` to run simulations with API-hosted models (via OpenRouter, OpenAI, or Anthropic). No local GPU required for inference.
+This uses the same OpenRouter model selection as the API launch script:
 
 ```bash
-bash scripts/launch_job_api.sh [seed] [population] [disinformation]
+python -m simulation.main \
+  experiment=fish_baseline_concurrent_leaders \
+  llm.path=openrouter-google/gemini-2.5-flash \
+  llm.is_api=true \
+  experiment.seed=1 \
+  experiment.agent.leader_population=balanced \
+  experiment.env.disinformation=false \
+  group_name=first_run \
+  debug=true
 ```
 
-Arguments are the same as above. The `model_id` variable in the script selects the API model. Supported providers include:
+`debug=true` selects disabled Weights & Biases logging through the logger. It still runs the simulation and makes model API calls. The model must be available to your provider account. Model routing is implemented in [PathFinder's loader](pathfinder/pathfinder/loader.py).
 
-- **Google**: Gemini, Gemma-3 (via OpenRouter)
-- **Meta**: Llama-3 (via OpenRouter)
-- **Qwen**: Qwen-2.5 (via OpenRouter)
-- **OpenAI**: GPT-4-Turbo, GPT-4o, GPT-3.5-Turbo
-- **Anthropic**: Claude 3.5 Sonnet, Claude 3.5 Haiku (via OpenRouter)
+Choose a new `group_name` for a separate experiment. The entry point removes an existing result directory when the computed output path matches an earlier run.
 
-There is also `launch_job_api_vanilla.sh` which runs the original GovSim simulation (without the election mechanism) using API-based models.
+### Local-model example
 
-### Batch Experiments
-
-Use batch scripts to launch sweeps over multiple seeds, population types, and disinformation settings. Jobs are submitted via `sbatch`.
-
-**Simulation batch:**
-```bash
-bash scripts/launch_job_batch.sh
-```
-This iterates over populations (`balanced`, `none`) × disinformation (`true`, `false`) × seeds (`1..4`), launching a job for each combination.
-
-**Social analysis batch:**
-```bash
-bash scripts/launch_social_batch.sh
-```
-Sweeps over all 8 population types × disinformation settings for social value orientation analysis.
-
-**Judge analysis batch:**
-```bash
-bash scripts/launch_judge_batch.sh
-```
-Sweeps over populations (`one_prosocial`, `one_altruistic`, `one_competitive`, `one_individualistic`) × disinformation settings for LLM-judge sentiment analysis.
-
-## Running Analyses
-
-### Social Value Orientation Analysis
-
-Computes social value orientation metrics from simulation outputs:
+With a compatible GPU environment and access to the model weights:
 
 ```bash
-bash scripts/launch_social.sh [population] [disinformation] [model_name]
+python -m simulation.main \
+  experiment=fish_baseline_concurrent_leaders \
+  llm.path=meta-llama/Meta-Llama-3-8B-Instruct \
+  llm.is_api=false \
+  llm.backend=transformers \
+  experiment.seed=1 \
+  experiment.agent.leader_population=balanced \
+  experiment.env.disinformation=false \
+  group_name=local_first_run \
+  debug=true
 ```
 
-| Argument | Default | Example |
-|----------|---------|---------|
-| `population` | `balanced` | `one_prosocial` |
-| `disinformation` | `true` | `false` |
-| `model_name` | `Qwen/Qwen1.5-110B-Chat-GPTQ-Int4` | `openrouter-google/gemini-2.5-flash` |
+The loader also has a `vllm` backend. Check the model-name routing, chat templates, and installed backend before changing model families.
 
-### LLM-Judge Sentiment Analysis
+### Cluster launchers and sweeps
 
-Uses an LLM-as-judge to evaluate leader sentiment in simulation conversations:
+The scripts in [scripts/](scripts/) are research launch templates. They contain SLURM account settings, module loads, environment activation, and absolute project paths. Adapt those values before running them, including when invoking a script with `bash` outside SLURM.
+
+| Script | Purpose |
+| --- | --- |
+| [launch_job_api.sh](scripts/launch_job_api.sh) | API-model simulation; positional arguments are seed, population, and disinformation |
+| [launch_job.sh](scripts/launch_job.sh) | Local-model simulation with the same argument order |
+| [launch_job_batch.sh](scripts/launch_job_batch.sh) | Population × disinformation × seed sweep |
+| [launch_social_batch.sh](scripts/launch_social_batch.sh) | Social-metric analysis sweep |
+| [launch_judge_batch.sh](scripts/launch_judge_batch.sh) | LLM-judge analysis sweep |
+
+After adapting the API launcher:
 
 ```bash
-bash scripts/launch_judge.sh [population] [disinformation] [sentiment_type]
+sbatch scripts/launch_job_api.sh 1 balanced false
 ```
 
-| Argument | Default | Options |
-|----------|---------|---------|
-| `population` | `one_prosocial` | Any population variant |
-| `disinformation` | `true` | `true`, `false` |
-| `sentiment_type` | `persuasion` | `cooperation`, `persuasion`, `svo` |
-
-See the [llm_judge/README.md](llm_judge/README.md) for more details on configuring the LLM judge.
-
-### General Analysis
-
-Run aggregate analysis scripts directly:
+Batch scripts refer to sibling launchers as `./launch_*.sh`, so run them from the `scripts` directory after adapting their settings:
 
 ```bash
-bash scripts/launch_analysis.sh
+cd scripts
+bash launch_job_batch.sh
 ```
 
-The analysis modules in `simulation/analysis/` include plotting (`plots.py`), preprocessing (`preprocessing.py`), per-group analysis (`group.py`), detailed result inspection (`details.py`), and social metrics (`social.py`).
+The local-model launcher checks `$1` when choosing the default for its third argument; supply all three positional arguments explicitly. `launch_job_api_vanilla.sh` still selects `fish_baseline_concurrent_12_agents`, which is absent from this checkout. Use `leader_population=none` with an existing experiment for the current no-candidate control.
 
-## Project Structure
+## Configuration
 
-```
-GovSimElect/
-├── scripts/               # Launch scripts for simulations and analyses
-├── simulation/
-│   ├── main.py            # Simulation entrypoint (Hydra-based)
-│   ├── run.py             # Simulation loop — builds and executes phases
-│   ├── analysis/          # Analysis and plotting modules
-│   ├── conf/              # Hydra configuration files
-│   │   ├── config.yaml    # Top-level Hydra config
-│   │   └── experiment/    # Experiment YAML variants
-│   ├── environment/       # Environment classes (ConcurrentEnv, PerturbationEnv)
-│   ├── persona/           # Agent state, cognition components, memory
-│   │   ├── persona.py     # PersonaAgent — stateful agent container
-│   │   ├── cognition/     # Act, Converse, Reflect, Leaders, etc.
-│   │   ├── memory/        # Associative memory and scratch
-│   │   └── common.py      # Shared data structures
-│   ├── phases/            # Modular simulation phase classes
-│   │   ├── base.py        # Phase ABC, PhaseContext, shared helpers
-│   │   ├── policy_making.py
-│   │   ├── election.py
-│   │   ├── harvesting.py
-│   │   ├── discussion.py
-│   │   └── reflection.py
-│   └── utils/             # Logger, model wrappers
-├── llm_judge/             # LLM-as-judge evaluation framework
-├── utils/                 # General utilities
-├── setup.sh               # Default setup (Conda)
-├── setup_venv.sh          # Virtual environment setup
-├── setup_vllm.sh          # vLLM setup for local open-weight models
-├── requirements.txt       # Pip dependencies (default)
-└── requirements_venv.txt  # Pip dependencies (venv / cluster)
+Hydra composes the top-level configuration with an experiment from [simulation/conf/experiment/](simulation/conf/experiment/). The checked-in experiment variants are `fish_baseline_concurrent_leaders` and `fish_baseline_concurrent_leaders_20`.
+
+| Setting | Purpose |
+| --- | --- |
+| `llm.path`, `llm.is_api`, `llm.backend` | Model selection and inference backend |
+| `experiment.seed` | Seed used by the simulation entry point |
+| `experiment.agent.leader_population` | Number and SVO mix of candidate leaders |
+| `experiment.env.disinformation` | Enables disinformation handling |
+| `experiment.env.max_num_rounds` | Maximum simulation rounds |
+| `experiment.env.regen_factor_range` | Resource regeneration range |
+| `experiment.env.harvesting_order` | Harvesting order, such as `concurrent` |
+| `experiment.phases` | Ordered phase list |
+| `group_name` | Experiment grouping, interpolated into the experiment name |
+
+Available candidate-population settings are:
+
+```text
+balanced
+none
+one_prosocial
+one_altruistic
+one_competitive
+one_individualistic
+lean_altruistic
+lean_competitive
 ```
 
-## Simulation Configuration
+Candidate distributions are defined in [leaders.py](simulation/persona/cognition/leaders.py). When changing population size, keep `env.num_agents`, `personas.num`, persona definitions, and candidate count consistent. The runner checks that there are enough agents for the candidate population.
 
-Simulation behavior is controlled by [Hydra](https://hydra.cc/) YAML files in `simulation/conf/`. The top-level `config.yaml` sets global defaults (LLM path, debug flags), while experiment-specific files in `conf/experiment/` define agent populations, environment parameters, and phase ordering.
+### Round structure
 
-### Experiment YAML Structure
+The default phase sequence is:
 
-Each experiment file (e.g. `fish_baseline_concurrent_leaders.yaml`) configures:
-
-| Section | Purpose |
-|---------|---------|
-| `phases` | Ordered list of simulation phase names (see below) |
-| `env` | Environment parameters — resource pool, regeneration, harvesting order, perturbations |
-| `personas` | Agent definitions — names, traits, number of agents |
-| `agent` | Agent cognition settings — prompts, conversation limits, leader population type |
-
-**Example experiment config:**
-
-```yaml
-name: fishing_${code_version}/${group_name}
-scenario: fishing
-debug: true
-seed: 0
-
-phases:
-  - policy_making
-  - election
-  - harvesting
-  - discussion
-  - reflection
-
-env:
-  max_num_rounds: 6
-  initial_resource_in_pool: 100
-  num_agents: 8
-  disinformation: false
-  harvesting_order: concurrent
-  regen_factor_range: [1.0, 3.0]
-
-agent:
-  leader_population: balanced    # balanced, none, one_prosocial, etc.
-  act:
-    harvest_strategy: one_step
-  converse:
-    max_conversation_steps: 50
+```text
+Policy making → Election → Harvesting and report → Discussion → Reflection
 ```
 
-### Key Configuration Options
+| Phase | What happens |
+| --- | --- |
+| `policy_making` | Candidate leaders produce agendas from their identities and memories |
+| `election` | Agents vote, or a single candidate is selected |
+| `harvesting` | Agents take resources and generate the harvest report |
+| `discussion` | Agents exchange messages about the round |
+| `reflection` | Agents reflect and store memories |
 
-**`env.disinformation`** — When `true`, elected leaders can inject disinformation into harvest reports.
+Reorder phases in an experiment YAML or with a Hydra override, preserving each phase's prerequisites. For example, the election phase uses agendas generated by policy-making.
 
-**`agent.leader_population`** — Controls the Social Value Orientation (SVO) distribution of leader candidates: `balanced`, `none` (no leaders), `one_prosocial`, `one_competitive`, etc.
+## Agent memory
 
-**`env.harvesting_order`** — Either `concurrent` (all agents harvest simultaneously) or `random-sequential`.
+This fork's current memory persistence is **Markdown-backed**. Each agent's memory directory contains `MEMORY.md`, with entries recording timestamps, memory type, importance, expiration, and an `always_include` flag.
 
-## Simulation Phases
+New entries are appended as they are stored. Retrieval reads the file, filters expired entries, scores candidates using the configured recency and importance logic, prioritizes `always_include` entries, and returns selected memories. Focal-point arguments remain in the interface but are unused in this Markdown retrieval mode.
 
-The simulation is organized into configurable **phases** that execute in sequence each round. Phase ordering is defined by the `phases` list in the experiment YAML.
+Implementation: [associative_memory.py](simulation/persona/memory/associative_memory.py) and [retrieve.py](simulation/persona/cognition/retrieve.py).
 
-### Default Phase Order
+## Results and analysis
 
-```
-PolicyMaking → Election → Harvesting(+Report) → Discussion → Reflection
-```
+Simulation data is written under `simulation/results/<experiment name>/<run name>/`. Hydra's own run directory is under `outputs/`; the entry point copies configuration and log files into the experiment directory.
 
-### Built-in Phases
+| Output | Contents |
+| --- | --- |
+| `consolidated_results.json` | Initialization, identities, elections, harvest statistics, and other run events |
+| `log_env.json` | Environment observations and actions |
+| Per-agent memory directories | Markdown memory records |
+| `.hydra/` and `main.log` | Configuration, overrides, and execution log |
 
-| Phase Name | Class | Description |
-|------------|-------|-------------|
-| `policy_making` | `PolicyMakingPhase` | Leaders generate policy agendas based on SVO, past harvest data, and the previous winning agenda |
-| `election` | `ElectionPhase` | Non-leader agents vote on leader agendas; winner is determined and announced |
-| `harvesting` | `HarvestingPhase` | Agents decide how many fish to catch; harvest report and public memories are generated at the end |
-| `discussion` | `DiscussionPhase` | Group conversation at the restaurant — agents discuss strategy and share information |
-| `reflection` | `ReflectionPhase` | Individual reflection at home — agents process the round's events into memories |
+The [analysis modules](simulation/analysis/) cover survival, resource use, inequality, social/election metrics, plots, and a Dash interface. Some modules contain fixed result roots, model lists, seed ranges, and population constants; point these at your own outputs before analysing a run.
 
-### Customizing Phase Order
+For social metrics, after updating `BASE_PATH` and the relevant settings in [social.py](simulation/analysis/social.py):
 
-To change the phase order, edit the `phases` list in your experiment YAML. For example, to run discussion before harvesting:
-
-```yaml
-phases:
-  - policy_making
-  - election
-  - discussion
-  - harvesting
-  - reflection
+```bash
+python -m simulation.analysis.social balanced false openrouter-google/gemini-2.5-flash
 ```
 
-To run without elections (e.g. for a no-leader experiment):
+The [LLM Judge guide](llm_judge/README.md) documents the separate evaluation package. Its [leader sentiment example](llm_judge/examples/leader_sentiment.py) classifies cooperation, persuasion, and SVO-related language. Update its input/output roots, model settings, and credentials before running it.
 
-```yaml
-phases:
-  - harvesting
-  - discussion
-  - reflection
+```bash
+cd llm_judge
+python examples/leader_sentiment.py one_prosocial false persuasion
 ```
 
-### Creating Custom Phases
+The existing `launch_analysis.sh` wrapper runs the leader-sentiment example; it is not a general runner for every analysis module.
 
-You can add new phases by implementing the `Phase` abstract base class and registering them in `run.py`.
+For comparisons, record the commit, resolved Hydra configuration, model/provider, seed, candidate distribution, disinformation setting, and phase order alongside the results. Keep original run outputs when comparing a new intervention with a baseline.
 
-#### Step 1: Create the phase class
+## Extend the simulation
 
-Create a new file in `simulation/phases/`, e.g. `my_phase.py`:
+Phases implement the asynchronous interface in [simulation/phases/base.py](simulation/phases/base.py) and are registered in [simulation/run.py](simulation/run.py).
+
+1. Add a phase module under `simulation/phases/`.
+2. Implement `name` and `async execute(ctx)` using `PhaseContext`.
+3. Register the phase class in `PHASE_REGISTRY`.
+4. Add its name to an experiment's `phases` list.
 
 ```python
-"""MyPhase — description of what this phase does."""
-
-from simulation.phases.base import Phase
-from simulation.phases.base import PhaseContext
+from simulation.phases.base import Phase, PhaseContext
 
 
 class MyPhase(Phase):
-    """One-line summary."""
-
     @property
     def name(self) -> str:
         return "my_phase"
 
-    def execute(self, ctx: PhaseContext) -> PhaseContext:
-        # Access agents via ctx.personas (dict of PersonaAgent)
-        # Access environment via ctx.env
-        # Access config via ctx.cfg
-        # Access the current observation via ctx.obs
-
-        for agent_id, agent in ctx.personas.items():
-            # Do something with each agent...
-            pass
-
-        # If stepping the environment:
-        # ctx.agent_id, ctx.obs, _, termination = ctx.env.step(action)
-
+    async def execute(self, ctx: PhaseContext) -> PhaseContext:
+        # Inspect or update the shared context here.
         return ctx
 ```
 
-The `PhaseContext` dataclass carries all mutable state between phases:
-- **`ctx.personas`** — dict of agent ID → `PersonaAgent`
-- **`ctx.env`** — the environment instance
-- **`ctx.obs`** — current observation from the environment
-- **`ctx.wrapper`** — LLM model wrapper for prompting
-- **`ctx.round_num`** — current round number
-- **`ctx.winner`** / **`ctx.agenda`** — current election results
-- **`ctx.round_harvest_stats`** — per-round harvest data
-- **`ctx.terminated`** — set to `True` to end the simulation
+Use the existing phases as examples for environment stepping, termination handling, memory storage, and logging.
 
-#### Step 2: Register the phase
+## Repository map
 
-In `simulation/run.py`, import your phase and add it to `PHASE_REGISTRY`:
-
-```python
-from simulation.phases.my_phase import MyPhase
-
-PHASE_REGISTRY = {
-    "policy_making": PolicyMakingPhase,
-    "election": ElectionPhase,
-    "harvesting": HarvestingPhase,
-    "discussion": DiscussionPhase,
-    "reflection": ReflectionPhase,
-    "my_phase": MyPhase,  # Add your phase here
-}
+```text
+GovSimEmergentLeader/
+├── simulation/
+│   ├── main.py             # Hydra entry point and output setup
+│   ├── run.py              # Phase registry and simulation runner
+│   ├── conf/               # Model defaults, experiments, and persona configuration
+│   ├── environment/        # Fishing environments
+│   ├── phases/             # Policy, election, harvest, discussion, reflection
+│   ├── persona/            # Agent identity, cognition, scratch state, memory
+│   ├── analysis/           # Metrics, plots, and dashboard modules
+│   └── utils/              # Logging and model wrappers
+├── scripts/                # Cluster launch and analysis templates
+├── pathfinder/             # Included model/prompting library
+├── llm_judge/              # LLM-based conversation evaluation
+├── imgs/                   # Project figures
+├── .env_example            # Environment-variable template
+├── requirements*.txt       # Dependency recipes
+└── setup*.sh               # Environment setup recipes
 ```
 
-#### Step 3: Use it in config
+## Acknowledgments and license
 
-Add the phase name to your experiment YAML:
-
-```yaml
-phases:
-  - policy_making
-  - election
-  - harvesting
-  - my_phase
-  - discussion
-  - reflection
-```
-
-#### Tips for Phase Development
-
-- **Environment coordination**: The environment has internal sub-phases (`lake`, `pool_after_harvesting`, `restaurant`, `home`). If your phase needs to drive environment steps, use `while ctx.env.phase == "phase_name":` loops to stay in sync.
-- **Termination**: Always check for termination after `env.step()` calls using `check_terminated(ctx, termination)` from `simulation.phases.base`.
-- **Agent state sync**: Call `sync_agent_state(agent, ctx)` to push the current agenda, harvest report, and leader info onto an agent before it acts.
-- **Logging**: Use `log_step(ctx, action)` after each `env.step()` to record game metrics.
-
+This fork builds on [AgentElect / GovSimElect](https://github.com/rfaulkner/GovSimElect), [GovSim](https://github.com/giorgiopiatti/GovSim), and its included [PathFinder](pathfinder/README.md) library. The existing [MIT license](LICENSE) and attribution are retained.
