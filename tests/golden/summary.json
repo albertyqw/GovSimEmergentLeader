@@ -1,0 +1,38 @@
+{
+  "replica_N8": {
+    "requests": 77,
+    "sha256": "ea252f3056b6fce906fce24ff135075894f12a1a1757a94f52f3b8164d2c5469",
+    "diff_file": "tests/golden/replica_N8.diff",
+    "matches_original": true
+  },
+  "baseline_N8": {
+    "requests": 93,
+    "sha256": "1542684a44c3ea11e2a2d45beca6f14028557b78451340feb47d828598b64c02",
+    "diff_file": "tests/golden/baseline_N8.diff",
+    "matches_original": false
+  },
+  "values_N8": {
+    "requests": 93,
+    "sha256": "c9207157fbef68064218756c2eafdd151bc87266d5ae07e2fae3366ff0a31011",
+    "diff_file": "tests/golden/values_N8.diff",
+    "matches_original": false
+  },
+  "stakes_N8": {
+    "requests": 93,
+    "sha256": "ed82c7690f06dc463f8b7acd04b41da589fa9c5ff32ce5274abfb376a41e8d7a",
+    "diff_file": "tests/golden/stakes_N8.diff",
+    "matches_original": false
+  },
+  "coord_N16": {
+    "requests": 181,
+    "sha256": "91fa3653f77ddaf1aa20dd39ccd5c508e073f1b24982ca396d5847cd66d105ef",
+    "diff_file": "tests/golden/coord_N16.diff",
+    "matches_original": false
+  },
+  "coord_N32": {
+    "requests": 357,
+    "sha256": "b60fba40294d7ed7bf55e57cc21853d294474f1857c454dd28bc22ce8b2f62fd",
+    "diff_file": "tests/golden/coord_N32.diff",
+    "matches_original": false
+  }
+}

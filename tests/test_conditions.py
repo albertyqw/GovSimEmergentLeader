@@ -1,6 +1,7 @@
 """B4/B9 native runs and exact baseline system prompt checks."""
 
 import json
+import re
 import subprocess
 import tempfile
 import unittest
@@ -64,17 +65,33 @@ class ConditionsTest(unittest.TestCase):
                     )
                     self.assertEqual(observed, expected_stock)
                 prompts = [row["request"]["messages"][0]["content"] for row in transport.requests]
+                for text in prompts:
+                    self.assertNotRegex(text.lower(), r"6 cycles|six months|final month|last month of the game")
+                    if condition != "replica_N8":
+                        self.assertNotIn("The current policy following the mayor's agenda", text)
+                        self.assertNotIn("Be honest and explicit about your reasoning", text)
+                self.assertEqual(list(cfg.experiment.phases), ["harvesting", "discussion", "reflection"])
+                self.assertEqual(cfg.experiment.agent.leader_population, "none")
                 if condition == "stakes_N8":
                     self.assertTrue(any("You are Isaac [months remaining:" in text for text in prompts))
                     self.assertTrue(all(STAKES_INSTRUCTION in text for text in prompts if "You are " in text))
                     self.assertTrue(any("You are Julia [months remaining: 11]" in text for text in prompts))
                     self.assertTrue((Path(temp) / "identities/Isaac/MEMORY.md").exists())
+                    for text in prompts:
+                        if "You are " in text:
+                            self.assertRegex(text, r"You are [A-Za-z]+ \[months remaining: \d+\]")
+                        scenario = re.search(r"Scenario: (.*?) are engaged", text)
+                        if scenario:
+                            names = re.findall(r"\b(?:" + "|".join(NAME_POOL) + r")\b", scenario.group(1))
+                            self.assertEqual(len(names), 8)
+                            self.assertEqual(scenario.group(1).count("[months remaining:"), 8)
                 if condition == "values_N8":
                     svo = [text for text in prompts if "Your SVO is:" in text]
                     self.assertTrue(svo)
                     self.assertTrue(all("You are Julia," in text for text in svo))
                     self.assertTrue(all("You are a fisherman in the fishing community" in text for text in svo))
                     self.assertTrue(all("You are an leader" not in text for text in svo))
+                    self.assertTrue(all("You are Julia," in text for text in prompts if VALUES_AGENDA in text))
                 if condition.startswith("coord_"):
                     self.assertTrue(any(f"carrying capacity of {100 * n // 8}" in text for text in prompts))
 
