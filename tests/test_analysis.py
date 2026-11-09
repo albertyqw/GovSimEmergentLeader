@@ -6,6 +6,28 @@ from study_analysis import adoption, graph_measures, null_comparisons
 
 
 class AnalysisTest(unittest.TestCase):
+    def test_incoming_degree_and_inverse_weight_paths_differ_from_legacy(self):
+        names = ["Julia", "Kate", "Luke"]
+        turns = [
+            {"speaker_identity": "Julia", "mentioned_identities": ["Kate"] * 10 + ["Luke"], "nominee_resolved": None},
+            {"speaker_identity": "Kate", "mentioned_identities": ["Luke"] * 10, "nominee_resolved": None},
+        ]
+        paper = graph_measures(names, turns)
+        self.assertEqual(paper["degree"], {"Julia": 0, "Kate": 10, "Luke": 11})
+        self.assertEqual(paper["betweenness"]["Kate"], 1)
+        legacy = graph_measures(names, turns, paper=False)
+        self.assertEqual(legacy["degree"]["Julia"], 11)
+        self.assertEqual(legacy["betweenness"]["Kate"], 0)
+
+    def test_equal_inverse_distance_paths_share_credit_exactly(self):
+        # 1/5 == 1/6 + 1/30, which is not a reliable float equality.
+        names = ["Julia", "Kate", "Luke"]
+        turns = [
+            {"speaker_identity": "Julia", "mentioned_identities": ["Kate"] * 6 + ["Luke"] * 5, "nominee_resolved": None},
+            {"speaker_identity": "Kate", "mentioned_identities": ["Luke"] * 30, "nominee_resolved": None},
+        ]
+        self.assertEqual(graph_measures(names, turns)["betweenness"]["Kate"], 0.5)
+
     def test_adoption_splits_ties_and_has_no_credit_without_agreement(self):
         self.assertEqual(adoption({"Julia": 2, "Kate": 2, "Jack": 3}, 2), {"Julia": 0.5, "Kate": 0.5, "Jack": 0})
         self.assertIsNone(adoption({"Julia": 2}, None))
@@ -25,7 +47,8 @@ class AnalysisTest(unittest.TestCase):
         result = null_comparisons(names, turns, "baseline_N8", 0, 1, samples=1000)
         self.assertEqual(result, null_comparisons(names, turns, "baseline_N8", 0, 1, samples=1000))
         self.assertAlmostEqual(result["airtime"]["mean"], 0.25, delta=0.04)
-        self.assertEqual(result["influence"]["degree"]["mean"], 0)
+        # With two agents, all redraws are fixed; incoming totals are 1 and 2.
+        self.assertAlmostEqual(result["influence"]["degree"]["mean"], 1 / 6)
 
 
 if __name__ == "__main__":

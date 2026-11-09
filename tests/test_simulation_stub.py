@@ -39,7 +39,7 @@ def original_config(rounds=1, neutral=False):
 
 
 def run_stub(cfg, directory, turns=3):
-    wrapper, logger, transport = make_wrapper(seed=cfg.seed, turns=turns)
+    wrapper, logger, transport = make_wrapper(seed=cfg.seed, turns=turns, study=hasattr(cfg.agent, "study_generation_max_tokens"))
     with contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings(record=True) as captured:
         warnings.simplefilter("always")
         asyncio.run(run(cfg, logger, wrapper, wrapper, str(directory)))

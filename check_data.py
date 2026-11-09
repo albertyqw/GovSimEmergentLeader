@@ -50,6 +50,7 @@ def check_run(path, null_samples=1000):
     n = metadata["N"]
     replica = metadata["condition"] == "replica_N8"
     capacity = metadata["resolved_config"]["experiment"]["env"]["initial_resource_in_pool"]
+    paper = metadata["resolved_config"]["experiment"]["env"].get("paper_definitions", False)
     outcomes = []
     totals = dict.fromkeys(range(n), 0)
     overusage = []
@@ -62,6 +63,11 @@ def check_run(path, null_samples=1000):
                 "Cost or token accounting is missing")
         require(call["parse_status"] != "pending", "A parse result was not finalized")
         require(call["finish_reason"] != "length", "A completion reached the length limit; B11/B14 requires review")
+        if paper:
+            fresh_rating = call["request"]["messages"][-1]["content"].startswith("Rating (1 to 10):")
+            require(call["request"]["max_tokens"] == (1000 if fresh_rating else 16000), "Study token cap mismatch")
+            if call["call_type"] in ("harvest", "utterance", "elicitation", "perceived_leadership", "reflection_insight"):
+                require(call.get("retrieval_top_k") == 10, "Paper-aligned recall did not request ten entries")
         for memory in call["retrieved_memories"]:
             require(all(key in memory for key in ("id", "text", "type", "creation_cycle", "source_agent", "importance",
                                                   "recency_score", "importance_score", "combined_score")), "Retrieval metadata incomplete")
@@ -75,6 +81,10 @@ def check_run(path, null_samples=1000):
         require(cycle["stock_before_harvest"] - sum(row["actual"] for row in cycle["catches"]) == cycle["stock_after_harvest"],
                 "Catch and stock accounting disagree")
         require(cycle["report_text"] and cycle["conversation_summary"], "Report or summary missing")
+        if paper:
+            from simulation.paper_definitions import sustainability_threshold
+            expected = sustainability_threshold(cycle["stock_before_harvest"], capacity, n, cycle["regen_factor"])
+            require(abs(cycle["sustainability_threshold"] - expected) < 1e-9, "Paper sustainability threshold mismatch")
         if index == 0:
             require(cycle["regen_factor"] == 2.0, "First regeneration factor changed")
         else:

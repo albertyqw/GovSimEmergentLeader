@@ -22,12 +22,17 @@ from simulation.utils.logger import WandbLogger
 ROOT = Path(__file__).resolve().parent
 
 
-def allocate_attempt(root, condition, seed):
+def allocate_attempt(root, condition, seed, expected_config=None):
     base = root / condition / f"seed{seed}"
     candidates = [base] + sorted(base.parent.glob(f"seed{seed}_attempt*"))
     for candidate in candidates:
         if (candidate / "run_meta.json").exists():
             try:
+                if expected_config is not None:
+                    from omegaconf import OmegaConf
+                    metadata = json.loads((candidate / "run_meta.json").read_text())
+                    if metadata["resolved_config"] != OmegaConf.to_container(expected_config, resolve=True):
+                        continue
                 result = check_run(candidate, null_samples=1)
                 if result["valid"]:
                     return candidate, True
@@ -86,7 +91,7 @@ def main():
     cfg.llm.path = "openrouter-" + model_id
     default_root = ROOT / "runs" if args.mode == "full" else ROOT / "runs" / args.mode
     output_root = Path(args.output_root) if args.output_root else default_root
-    path, complete = allocate_attempt(output_root, args.condition, args.seed)
+    path, complete = allocate_attempt(output_root, args.condition, args.seed, expected_config=cfg)
     if complete:
         metadata = json.loads((path / "run_meta.json").read_text())
         current = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()

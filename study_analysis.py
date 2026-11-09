@@ -3,6 +3,7 @@
 import math
 import random
 from collections import Counter
+from fractions import Fraction
 
 import networkx as nx
 import numpy as np
@@ -32,13 +33,12 @@ def reference_events(turn, names):
     return mentions, nominations
 
 
-def graph_measures(names, turns, rng=None):
-    """Directed version of AgentElect's edge and shortest-path conventions.
+def graph_measures(names, turns, rng=None, paper=True):
+    """Paper incoming degree and directed inverse-distance betweenness.
 
-    Mentions and nominations add weight; weighted endpoint degree counts both
-    ends. Betweenness counts intermediate nodes on the selected unweighted
-    shortest paths, following social.py. Eigenvector centrality is unweighted,
-    as in social.py, with incoming-edge direction and explicit non-uniqueness.
+    Exact rational distances preserve equal shortest paths. Historical data
+    can explicitly select the previous endpoint/selected-path conventions.
+    Eigenvectors remain incoming and unweighted, with explicit non-uniqueness.
     """
     graph = nx.DiGraph()
     graph.add_nodes_from(names)
@@ -49,13 +49,18 @@ def graph_measures(names, turns, rng=None):
             if rng is not None:
                 target = rng.choice([name for name in names if name != speaker])
             graph.add_edge(speaker, target, weight=graph.get_edge_data(speaker, target, {}).get("weight", 0) + 1)
-    degree = {name: float(graph.degree(name, weight="weight")) for name in names}
+    degree = {name: float(graph.in_degree(name, weight="weight") if paper else graph.degree(name, weight="weight")) for name in names}
     between = dict.fromkeys(names, 0.0)
-    for source, paths in nx.all_pairs_shortest_path(graph):
-        for target, path in paths.items():
-            if source != target:
-                for middle in path[1:-1]:
-                    between[middle] += 1
+    if paper:
+        for source, target, data in graph.edges(data=True):
+            data["distance"] = Fraction(1, data["weight"])
+        between = nx.betweenness_centrality(graph, weight="distance", normalized=False, endpoints=False)
+    else:
+        for source, paths in nx.all_pairs_shortest_path(graph):
+            for target, path in paths.items():
+                if source != target:
+                    for middle in path[1:-1]:
+                        between[middle] += 1
     adjacency = nx.to_numpy_array(graph, nodelist=names, weight=None).T
     eigen = None
     reason = None
@@ -82,7 +87,7 @@ def graph_measures(names, turns, rng=None):
     return result
 
 
-def null_comparisons(names, turns, condition, seed, cycle, samples=1000):
+def null_comparisons(names, turns, condition, seed, cycle, samples=1000, paper=True):
     """User-defined nomination-chain airtime and airtime-conditioned targets."""
     airtime = []
     influence = {key: [] for key in ("degree", "betweenness", "eigenvector")}
@@ -100,7 +105,7 @@ def null_comparisons(names, turns, condition, seed, cycle, samples=1000):
                     speaker = rng.choice(options)
         airtime.append(gini(counts.values()))
         targets = random.Random(f"analysis_targets|{condition}|{seed}|{cycle}|{replicate}")
-        random_graph = graph_measures(names, turns, rng=targets)
+        random_graph = graph_measures(names, turns, rng=targets, paper=paper)
         for key in influence:
             if random_graph["gini"][key] is not None:
                 influence[key].append(random_graph["gini"][key])
@@ -125,7 +130,8 @@ def cycle_measures(metadata, cycle, turns, samples=1000):
     votes = Counter(result["resolved_identity"] for result in (cycle.get("perceived_leadership") or {}).values())
     preferred = [value for value in limits.values() if isinstance(value, (int, float))]
     plans = [result["plan"] for result in elicitations.values() if isinstance(result.get("plan"), (int, float))]
-    graph = graph_measures(names, turns)
+    paper = metadata.get("resolved_config", {}).get("experiment", {}).get("agent", {}).get("paper_definitions", False)
+    graph = graph_measures(names, turns, paper=paper)
     focal = metadata["seed"] % 8 if metadata["condition"] in ("values_N8", "stakes_N8") else None
     opener_slot = turns[0]["slot"] if turns else None
     opener = turns[0]["speaker_identity"] if turns else None
@@ -148,5 +154,5 @@ def cycle_measures(metadata, cycle, turns, samples=1000):
             if preferred and isinstance(agreed, (int, float)) else None,
             "discussion_first_proposer": "stored text reserved for post-experiment extraction",
         },
-        "null": null_comparisons(names, turns, metadata["condition"], metadata["seed"], cycle["cycle"], samples),
+        "null": null_comparisons(names, turns, metadata["condition"], metadata["seed"], cycle["cycle"], samples, paper=paper),
     }

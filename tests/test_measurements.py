@@ -9,6 +9,7 @@ from omegaconf import open_dict
 
 from simulation.measurement_prompts import parse_elicitation, resolve_name
 from simulation.intervention_randomness import NAME_POOL
+from simulation.study_config import compose_study_config
 from test_simulation_stub import original_config, run_stub
 
 
@@ -32,8 +33,10 @@ class MeasurementTest(unittest.TestCase):
             self.assertEqual(resolve_name(name.lower(), NAME_POOL), name)
 
     def test_extra_calls_include_silent_agents_and_leave_memory_identical(self):
-        off = original_config(neutral=True)
-        on = original_config(neutral=True)
+        off = compose_study_config("baseline_N8", 0, cycles=1).experiment
+        on = compose_study_config("baseline_N8", 0, cycles=1).experiment
+        off.agent.converse.elicitation = False
+        off.agent.converse.perceived_leadership = False
         with open_dict(on):
             on.agent.converse.elicitation = True
             on.agent.converse.perceived_leadership = True

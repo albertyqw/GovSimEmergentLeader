@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 from simulation.intervention_randomness import NAME_POOL
 from simulation.interventions import VALUES_AGENDA, STAKES_INSTRUCTION
+from simulation.paper_definitions import HONESTY_PROMPT, SVO_PRIVACY_PROMPT
 from simulation.persona.cognition import utils
 from simulation.study_config import CONDITIONS, compose_study_config
 from test_simulation_stub import run_stub
@@ -69,7 +70,14 @@ class ConditionsTest(unittest.TestCase):
                     self.assertNotRegex(text.lower(), r"6 cycles|six months|final month|last month of the game")
                     if condition != "replica_N8":
                         self.assertNotIn("The current policy following the mayor's agenda", text)
-                        self.assertNotIn("Be honest and explicit about your reasoning", text)
+                        self.assertNotIn("As a leader, you will now craft your policy agenda", text)
+                    if "Task: With a fishing range" in text or "Scenario:" in text:
+                        self.assertIn(HONESTY_PROMPT, text)
+                    self.assertNotIn("will reproduce and double once", text)
+                for row in transport.requests:
+                    request = row["request"]
+                    fresh = request["messages"][-1]["content"].startswith("Rating (1 to 10):")
+                    self.assertEqual(request["max_tokens"], 1000 if fresh else 16000)
                 self.assertEqual(list(cfg.experiment.phases), ["harvesting", "discussion", "reflection"])
                 self.assertEqual(cfg.experiment.agent.leader_population, "none")
                 if condition == "stakes_N8":
@@ -91,6 +99,8 @@ class ConditionsTest(unittest.TestCase):
                     self.assertTrue(all("You are Julia," in text for text in svo))
                     self.assertTrue(all("You are a fisherman in the fishing community" in text for text in svo))
                     self.assertTrue(all("You are an leader" not in text for text in svo))
+                    self.assertTrue(all(SVO_PRIVACY_PROMPT in text for text in svo))
+                    self.assertTrue(all(SVO_PRIVACY_PROMPT not in text for text in prompts if "Your SVO is:" not in text))
                     self.assertTrue(all("You are Julia," in text for text in prompts if VALUES_AGENDA in text))
                 if condition.startswith("coord_"):
                     self.assertTrue(any(f"carrying capacity of {100 * n // 8}" in text for text in prompts))

@@ -92,10 +92,14 @@ class StubLogger:
         self.games.append(record)
 
 
-def make_wrapper(seed=0, turns=3, catch=2):
+def make_wrapper(seed=0, turns=3, catch=2, study=False):
     transport = StubModel(seed=seed, turns=turns, catch=catch)
     logger = StubLogger()
-    wrapper = ModelWandbWrapper(
+    wrapper_class = ModelWandbWrapper
+    if study:
+        from simulation.study_models import StudyModelWrapper
+        wrapper_class = StudyModelWrapper
+    wrapper = wrapper_class(
         transport, render=False, wanbd_logger=logger,
         temperature=0.0, top_p=1.0, seed=seed, is_api=True,
     )
