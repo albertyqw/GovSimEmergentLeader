@@ -101,13 +101,31 @@ def check_run(path, null_samples=1000):
         for position, turn in enumerate(cycle_turns):
             require(turn["position"] == position and turn["call_id"] in ids, "Turn ordering or call link is invalid")
             require("nominee_options" in turn and "nominee_options_rendered" in turn, "Offered nominee options were not captured")
-            if metadata.get("neutral_study") and not turn["end_conversation"]:
+            if metadata.get("neutral_study") and not metadata.get("round_robin_discussion") and not turn["end_conversation"]:
                 draw = turn.get("nomination_fallback") or {}
                 require(draw.get("key") == f"nominee_fallback|{metadata['seed']}|{cycle['cycle']}|{position}",
                         "Nomination fallback RNG key missing or incorrect")
                 require(draw.get("candidate") in turn["nominee_options_rendered"] and "applied" in draw,
                         "Nomination fallback draw/options/status missing")
 
+        if metadata.get("round_robin_discussion"):
+            names = {row["identity"] for row in cycle["catches"]}
+            opening = cycle_turns[:n]
+            from simulation.intervention_randomness import opening_order
+            require([t["slot"] for t in opening] == opening_order(metadata["seed"], cycle["cycle"], n),
+                    "Opening slot order does not match recorded RNG policy")
+            require(len(opening) == n and {t["speaker_identity"] for t in opening} == names,
+                    "Opening round did not cover every present agent exactly once")
+            require(all(t["discussion_stage"] == "opening" and not t["end_conversation"] for t in opening),
+                    "Opening round ended early or has wrong phase")
+            require(all(not t["nomination_enabled"] and t["nominee_resolved"] is None for t in opening[:-1]),
+                    "An early opening turn nominated a speaker")
+            require(opening[-1]["nomination_enabled"] and opening[-1]["nominee_resolved"] in names,
+                    "Final opening turn did not hand off")
+            require(all(t["discussion_stage"] == "nomination" for t in cycle_turns[n:]), "Nomination stage missing")
+            require(len(cycle_turns) + cycle["framework_messages"] <= 50, "Discussion exceeded total cap")
+            for current, following in zip(cycle_turns, cycle_turns[1:]):
+                require(current["scheduled_next_identity"] == following["speaker_identity"], "Scheduled routing mismatch")
         for catch in cycle["catches"]:
             require(catch["actual"] >= 0 and catch["actual"] <= max(catch["requested"], 0), "Invalid actual catch")
             totals[catch["slot"]] += catch["actual"]
@@ -146,6 +164,20 @@ def check_run(path, null_samples=1000):
         require(all((parse_rates[kind + "_success_rate"] or 0) >= 0.97
                     for kind in ("elicitation", "perceived_leadership")),
                 "Baseline seed 0 failed B11's 97% instrument parsing gate")
+    interventions = []
+    if metadata.get("round_robin_discussion"):
+        interventions = jsonl(path / "nomination_judgments.jsonl.gz")
+        events = {e["event_id"]: e for e in interventions}
+        require(len(events) == len(interventions), "Duplicate nomination judgment event")
+        expected = {t["judge_intervention_id"] for t in turns if t.get("nomination_source") in ("judge", "random")}
+        require(set(events) == expected, "Judgment table and routed turns disagree")
+        judge_ids = {call["call_id"] for call in calls if call["call_type"] == "nomination_judge"}
+        require(judge_ids == {cid for event in interventions for cid in event["judge_call_ids"]}, "Judge call link mismatch")
+        for event in interventions:
+            require(event["resolved_identity"] in event["eligible_identities"], "Judge routed to ineligible agent")
+            if event["resolution_source"] == "random":
+                require(event["random_fallback"]["key"] == f"nominee_fallback|{metadata['seed']}|{event['cycle']}|{event['position']}",
+                        "Judge random-fallback key mismatch")
     return {
         "valid": True, "condition": metadata["condition"], "seed": metadata["seed"], "commit_hash": metadata["commit_hash"],
         "survival_time": len(cycles), "survived": not any(cycle["collapse"] for cycle in cycles),
@@ -159,6 +191,7 @@ def check_run(path, null_samples=1000):
         "429_count": sum(error["type"] == 429 for error in errors), "402_count": sum(error["type"] == 402 for error in errors),
         "cycles": outcomes, "convergence": convergence, "final_month_catch_mean": float(np.mean(final_month_catches)) if final_month_catches else None,
         "parse_rates": parse_rates,
+        "nomination_judgments": {"count": len(interventions), "judge_selected": sum(e["resolution_source"] == "judge" for e in interventions), "random_fallback": sum(e["resolution_source"] == "random" for e in interventions)},
         "truncation_count": sum(call["finish_reason"] == "length" for call in calls),
         "parse_failure_operations": sum(op["status"] == "failed" for call in calls for op in call.get("parse_operations", [])),
         "fallback_operations": sum(bool(op.get("fallback_applied")) for call in calls for op in call.get("parse_operations", [])),

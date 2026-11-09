@@ -1,3 +1,9 @@
+# Current two-stage source amendment
+
+The user approved a mandatory opening round, nomination handoff by its final speaker, a hidden contextual nomination judge, random fallback when unclear, a separate running intervention table, and 50 messages total. All study configs require `round_robin_discussion: true`. Earlier smoke/pilot versions are preserved and superseded. Repeat six one-cycle smokes before the user starts the replacement pilot; retain final-runs and final-runs-v2 and freeze the replacement as final-runs-v3. Never launch a full run from Codex.
+
+The shared judge table is `runs/.control/nomination_judgments.sqlite`. Export a readable snapshot with `.venv/bin/python -m tools.nomination_table`; the default destination is `runs/nomination_judgments.tsv`. Judge calls appear in the ordinary raw calls and cost ledger.
+
 # Current source amendment
 
 All study conditions now require `agent.neutral_study: true`: explicit participant counts, neutral scripted prompts, and keyed uniform invalid-nomination fallback. The initial full pilot is superseded and preserved under `final-runs`. All six revised smokes passed on 499f8d2; see SMOKE_REPORT.md. The user may start the replacement pilot after the final source tag is pushed. Freeze the replacement source as `final-runs-v2`, retaining the original tag. The same pilot command will allocate a fresh attempt because the resolved config differs. No full pilot is launched by Codex. Historical procedures below otherwise apply.

@@ -106,3 +106,4 @@ agent:
   paper_definitions: true
   study_generation_max_tokens: 16000
   neutral_study: true
+  round_robin_discussion: true

@@ -70,3 +70,9 @@ Failed parse operations retain status/error and, where the original wrapper retu
 ## Neutral study amendment
 
 `run_meta.neutral_study` identifies the amended common profile. Non-ending utterances carry `nomination_fallback` with `key`, rendered `options`, sampled `candidate`, and `applied`. Call records also retain the draw when attached to that request; parse operations keep failure status plus applied fallback/value. A planned candidate with `applied: false` is not a parsing failure. The checker verifies the per-turn key and valid candidate. All older data remain unchanged.
+
+## Two-stage protocol and hidden judge
+
+`run_meta.round_robin_discussion` selects the current protocol. Cycles add opening slot order and RNG keys plus the last-opening handoff; utterances add `discussion_stage`, `nomination_enabled`, `scheduled_next_identity`, `nomination_source` and `judge_intervention_id`. Fixed opening transitions are not nominations and do not create nomination edges. The final opening handoff remains an opening-stage event. Phase summaries include airtime, silence, centralities, routing-source counts and matching null comparisons.
+
+Every invalid nomination creates one `nomination_judgments.jsonl.gz` row, linked to all ordinary calls of type `nomination_judge`. It stores the original nominee/context-linked turn, eligible identities, judge output/reason/model/cost/call IDs, actual selection source and final identity, and RNG details if needed. All paid events also append transactionally to `runs/.control/nomination_judgments.sqlite` (`nomination_judgments` table). `python -m tools.nomination_table` exports the current table to `runs/nomination_judgments.tsv` without changing raw logs. These judge calls are live routing interventions, distinct from deferred post-experiment judges. Their API costs count in the shared project ledger.

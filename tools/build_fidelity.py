@@ -69,7 +69,7 @@ def main():
             marker = markers[condition]
             prompt = next((text for text in prompts if marker in text), prompts[0])
             position = prompt.find(marker)
-            excerpts[condition] = prompt[max(0, position - 30):position + 650]
+            excerpts[condition] = prompt[max(0, position - 30):position + 650].rstrip()
             for row in json.loads(current):
                 request = row["request"]
                 fresh = request["messages"][-1]["content"].startswith("Rating (1 to 10):")
@@ -86,8 +86,12 @@ def main():
                     "constructor repair. A fixed original opener controls the comparison state. Full sorted requests and canned "
                     "responses are hashed; unified diffs cover every request type. The disabled-override original path matches byte for byte. "
                     "All study conditions, including replica, use the approved common paper definitions, ten-entry recall, aligned prompts "
-                    "and 16000/1000 token caps. These are disclosed exceptions to the pinned source. Live routing and the user-approved common neutral study amendment (explicit group size, no scripted leadership cues, keyed uniform invalid-nomination fallback) are also approved exceptions.\n"]
+                    "and 16000/1000 token caps. These are disclosed exceptions to the pinned source. Live routing and the user-approved common neutral study amendment (explicit group size, no scripted leadership cues, keyed uniform invalid-nomination fallback) are also approved exceptions. Current study runs additionally use a mandatory opening round, last-opening nomination handoff and a hidden contextual judge for invalid nominations; the total 50-message limit is retained.\n"]
         locations = {
+            "OPENING_TURN_PROMPT": "simulation/two_stage_discussion.py:utterance",
+            "OPENING_LAST_TURN_PROMPT": "simulation/two_stage_discussion.py:utterance",
+            "NOMINATION_TURN_PROMPT": "simulation/two_stage_discussion.py:utterance",
+            "NOMINATION_JUDGE_PROMPT": "simulation/two_stage_discussion.py:adjudicate (hidden)",
             "PARTICIPANT_COUNT_TEMPLATE": "simulation/persona/cognition/utils.py:get_sytem_prompt_v3",
             "ANNOUNCER_TEMPLATE": "simulation/persona/cognition/converse.py",
             "VALUES_AGENDA": "simulation/conf/experiment/values_N8*.yaml; simulation/persona/cognition/utils.py",

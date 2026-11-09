@@ -47,3 +47,10 @@ def successor_horizon(seed: int, slot: int, cycle: int) -> int:
 def nomination_fallback(key, options):
     """Uniform, independent per-turn fallback; never consumes global RNG."""
     return random.Random(key).choice(options)
+
+
+def opening_order(seed, cycle, num_agents):
+    first = opener_slot(seed, cycle, num_agents)
+    rest = [slot for slot in range(num_agents) if slot != first]
+    random.Random(f"opening_order|{seed}|{cycle}").shuffle(rest)
+    return [first] + rest

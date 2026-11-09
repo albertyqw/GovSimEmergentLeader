@@ -87,7 +87,7 @@ def graph_measures(names, turns, rng=None, paper=True):
     return result
 
 
-def null_comparisons(names, turns, condition, seed, cycle, samples=1000, paper=True):
+def null_comparisons(names, turns, condition, seed, cycle, samples=1000, paper=True, entry_options=None):
     """User-defined nomination-chain airtime and airtime-conditioned targets."""
     airtime = []
     influence = {key: [] for key in ("degree", "betweenness", "eigenvector")}
@@ -95,14 +95,20 @@ def null_comparisons(names, turns, condition, seed, cycle, samples=1000, paper=T
         rng = random.Random(f"analysis_airtime|{condition}|{seed}|{cycle}|{replicate}")
         counts = dict.fromkeys(names, 0)
         if turns:
-            speaker = turns[0]["speaker_identity"]
+            speaker = rng.choice(entry_options) if entry_options else turns[0]["speaker_identity"]
             for position in range(len(turns)):
+                current = turns[position]
+                if current.get("discussion_stage") == "opening":
+                    speaker = current["speaker_identity"]
                 counts[speaker] += 1
                 if position < len(turns) - 1:
-                    options = turns[position]["nominee_options"]
-                    if not options:
-                        raise ValueError("An intermediate turn has no recorded nominee options")
-                    speaker = rng.choice(options)
+                    if turns[position + 1].get("discussion_stage") == "opening":
+                        speaker = turns[position + 1]["speaker_identity"]
+                    else:
+                        options = current["nominee_options"]
+                        if not options:
+                            raise ValueError("An intermediate nomination turn has no recorded options")
+                        speaker = rng.choice(options)
         airtime.append(gini(counts.values()))
         targets = random.Random(f"analysis_targets|{condition}|{seed}|{cycle}|{replicate}")
         random_graph = graph_measures(names, turns, rng=targets, paper=paper)
@@ -137,9 +143,26 @@ def cycle_measures(metadata, cycle, turns, samples=1000):
     opener = turns[0]["speaker_identity"] if turns else None
     agreed = cycle["agreed_limit"]
     opener_limit = limits.get(opener)
+    phases = None
+    if metadata.get("round_robin_discussion"):
+        phases = {}
+        handoff = cycle.get("opening_handoff") or {}
+        for stage in ("opening", "nomination"):
+            subset = [t for t in turns if t.get("discussion_stage") == stage]
+            stage_counts = Counter(t["speaker_identity"] for t in subset)
+            phases[stage] = {
+                "utterances": len(subset), "airtime": {name: stage_counts[name] for name in names},
+                "airtime_gini": gini(stage_counts[name] for name in names),
+                "silent_share": sum(stage_counts[name] == 0 for name in names) / len(names),
+                "centrality": graph_measures(names, subset, paper=paper),
+                "routing_sources": dict(Counter(t.get("nomination_source") for t in subset)),
+                "null": null_comparisons(names, subset, metadata["condition"], metadata["seed"],
+                                         cycle["cycle"], samples, paper=paper,
+                                         entry_options=handoff.get("nominee_options") if stage == "nomination" else None),
+            }
     return {
         "cycle": cycle["cycle"], "airtime": airtime, "silent_share": sum(value == 0 for value in airtime.values()) / len(names),
-        "airtime_gini": gini(airtime.values()), "centrality": graph,
+        "airtime_gini": gini(airtime.values()), "centrality": graph, "discussion_phases": phases,
         "elicited_proposal_adoption": adoption(limits, cycle["agreed_limit"]) if elicitations else None,
         "peer_nominations": dict(votes), "planned_catch_dispersion": float(np.std(plans)) if plans else None,
         "preferred_limit_dispersion": float(np.std(preferred)) if preferred else None,

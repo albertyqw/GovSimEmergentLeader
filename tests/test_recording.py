@@ -50,6 +50,7 @@ class RecordingTest(unittest.TestCase):
                                  ("coord_N32", "invalid"), ("replica_N8", "invalid_followup")):
             with self.subTest(condition=condition), tempfile.TemporaryDirectory() as temp:
                 cfg = compose_study_config(condition, 0, cycles=1)
+                cfg.experiment.agent.round_robin_discussion = False
                 path = Path(temp) / "run"
                 recorder = RunRecorder(path, condition, 0, cfg)
                 wrapper = RecordingWrapper(StubModel(nomination_style=style, turns=5), recorder,
@@ -84,6 +85,7 @@ class RecordingTest(unittest.TestCase):
         for style in ("tagged", "bare", "lowercase", "partial"):
             with self.subTest(style=style), tempfile.TemporaryDirectory() as temp:
                 cfg = compose_study_config("stakes_N8", 0, cycles=1)
+                cfg.experiment.agent.round_robin_discussion = False
                 path = Path(temp) / "run"
                 recorder = RunRecorder(path, "stakes_N8", 0, cfg)
                 transport = StubModel(nomination_style=style)

@@ -1,3 +1,9 @@
+# Two-stage profile: fresh smokes pending
+
+The current protocol guarantees an opening turn for all present agents, allows nomination from the final opening turn onward, resolves invalid nominations with a hidden contextual judge and then random if unclear, and retains 50 total messages. Every judge intervention is logged separately and billed in the shared ledger. All prior attempts are preserved and superseded for this profile. Project spending before new smokes is $1.03935069. No full replacement pilot has started.
+
+---
+
 # Neutral study smoke validation complete
 
 All six seed-0, one-cycle Flash-Lite smokes passed `check_data.py` with 1000 null replicates on source commit `499f8d2`. Every run records the same start/end commit, `neutral_study: true`, correct participant counts, common paper settings, and fixed 16000/1000 caps. The initial full pilot and all earlier attempts remain preserved and superseded. No replacement full Flash pilot has started.

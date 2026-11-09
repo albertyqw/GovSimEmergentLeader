@@ -8,9 +8,11 @@ from simulation.utils.models import ModelWandbWrapper
 
 
 class StubModel(ModelAPI):
-    def __init__(self, seed=0, turns=3, catch=2, nomination_style="tagged", multiline_memory=False):
+    def __init__(self, seed=0, turns=3, catch=2, nomination_style="tagged", multiline_memory=False, judge_answer="UNCLEAR", early_close=False):
         super().__init__("google/gemini-2.5-flash", seed)
         self.requests = []
+        self.judge_answer = judge_answer
+        self.early_close = early_close
         self.turns = turns
         self.catch = catch
         self.nomination_style = nomination_style
@@ -18,7 +20,9 @@ class StubModel(ModelAPI):
 
     def request_api(self, chat, temperature, top_p, max_tokens):
         prompt = "\n".join(message["content"] for message in chat)
-        if "Before this month's discussion begins" in prompt:
+        if "You are reviewing an invalid speaker nomination" in prompt:
+            response = self.judge_answer if self.judge_answer == "MALFORMED" else f"ANSWER: {self.judge_answer}\nREASON: judge-only-private-evidence-marker"
+        elif "Before this month's discussion begins" in prompt:
             plan = "" if "PLAN: <number>" not in prompt else f"PLAN: {self.catch}\n"
             response = plan + f"LIMIT: {self.catch}\nREASON: Preserve the commons."
         elif "whose suggestions, if anyone's" in prompt:
@@ -39,6 +43,8 @@ class StubModel(ModelAPI):
                     next_name = next_name[:3]
             if self.nomination_style in ("invalid", "invalid_followup"):
                 next_name = "Anonymous Leader"
+            if self.nomination_style == "everyone":
+                next_name = "Everyone"
             if self.nomination_style == "invalid_followup":
                 next_name = ""
             transcript = prompt.rsplit("\nConversation so far:\n", 1)[1].split("\n\nTask:", 1)[0]
@@ -48,6 +54,12 @@ class StubModel(ModelAPI):
                 f"Response: Let us agree on {self.catch} tons each.\n"
                 f"Conversation conclusion by me: {ending}\nNext speaker: {next_name}"
             )
+            if "Do not nominate a speaker or conclude the discussion." in prompt.split("Task:")[-1]:
+                response = f"Response: Let us agree on {self.catch} tons each."
+                if self.early_close:
+                    response += "\nConversation conclusion by me: yes\nNext speaker: Julia"
+            elif "You are the final speaker in the opening round." in prompt.split("Task:")[-1]:
+                response = f"Response: Let us agree on {self.catch} tons each.\nNext speaker: {next_name}"
         elif "Summarize the conversation above in one sentence." in prompt:
             response = f"The community agreed to {self.catch} tons per person."
         elif "Determine whether there was an explicit agreement" in prompt:

@@ -25,6 +25,12 @@ def prompt_converse_utterance_in_group(
     debug: bool = False,
 ) -> tuple[str, bool, str]:
   """Prompt to get utterance from conversation."""
+  if getattr(init_persona.cfg, "round_robin_discussion", False):
+    from simulation.two_stage_discussion import utterance
+    return utterance(model, init_persona, target_personas, init_retrieved_memory,
+                     current_location, current_time, current_context, current_conversation,
+                     opening=getattr(init_persona, "discussion_stage", None) == "opening",
+                     opening_last=getattr(init_persona, "opening_last", False))
   lm, chain = model.start_chain_async(
       init_persona.identity.name,
       "cognition_converse",

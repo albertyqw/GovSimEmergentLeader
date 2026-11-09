@@ -1,6 +1,7 @@
 """Converse cognition component — handles group conversations."""
 
 import datetime
+import os
 import random
 
 from simulation.utils import models as sim_models
@@ -125,7 +126,13 @@ class ConverseComponent(component.Component):
             current_time, current_context, harvest_report, "elicitation",
         )
 
-    if leader_persona:
+    two_stage = getattr(self.persona.cfg, "round_robin_discussion", False)
+    ordered_opening = None
+    if two_stage:
+      from simulation.intervention_randomness import opening_order
+      ordered_opening = [target_personas[i] for i in opening_order(intervention_seed, intervention_cycle, len(target_personas))]
+      current_persona = ordered_opening[0]
+    elif leader_persona:
       current_persona = leader_persona
     else:
       if getattr(self.cfg, "seeded_opener", False):
@@ -171,6 +178,12 @@ class ConverseComponent(component.Component):
         if intervention_seed is None or intervention_cycle is None:
           raise ValueError("Neutral study nominations require seed and cycle")
         current_persona.nomination_fallback_key = f"nominee_fallback|{intervention_seed}|{intervention_cycle}|{len(turn_records)}"
+      position = len(turn_records)
+      opening = two_stage and position < len(target_personas)
+      opening_last = opening and position == len(target_personas) - 1
+      if two_stage:
+        current_persona.discussion_stage = "opening" if opening else "nomination"
+        current_persona.opening_last = opening_last
       utterance, end_conversation, next_name, h = prompt(
           self.model,
           current_persona,
@@ -187,17 +200,51 @@ class ConverseComponent(component.Component):
       observed_turn = {}
       if hasattr(self.model, "recorder"):
         observed_turn = getattr(self.model.recorder, "last_utterance", {}).get(current_persona.identity.name, {})
+      judgment = None
+      nomination_enabled = (not opening or opening_last) and not end_conversation
+      source = "end" if end_conversation else "agent"
+      nominated = next_name
+      if two_stage:
+        if opening and not opening_last:
+          next_name = ordered_opening[position + 1].identity.name
+          nominated = None
+          source = "fixed_opening"
+        elif nomination_enabled and next_name is None:
+          from simulation.two_stage_discussion import adjudicate
+          next_name, judgment = adjudicate(
+              self.model, current_persona, target_personas,
+              self.conversation_render(current_conversation + [(current_persona.identity, utterance)]),
+              current_persona.last_nominee_raw, intervention_seed, intervention_cycle, position,
+          )
+          nominated = next_name
+          source = judgment["resolution_source"]
+          current_persona.nomination_fallback = judgment["random_fallback"]
+      if two_stage:
+        from simulation.persona.cognition import utils as cognition_utils
+        cognition_utils.log_to_file(
+            log_type="converse_response",
+            data={"speaker": current_persona.identity.name, "svo": current_persona.svo_type.value,
+                  "utterance": utterance, "utterance_ended": end_conversation,
+                  "next_speaker": next_name, "discussion_stage": current_persona.discussion_stage,
+                  "nomination_source": source},
+            log_path=os.path.join(current_persona.experiment_storage, cognition_utils.COGNITION_RESPONSES_JSON),
+        )
       turn_records.append({
           "speaker_identity": current_persona.identity.name,
           "slot": int(current_persona.agent_id.split("_")[-1]),
           "rendered_tag": render_name(current_persona.identity),
           "text": utterance, "nominee_raw": (observed_turn.get("nominee_raw") or
               getattr(current_persona, "last_nominee_raw", next_name)),
-          "nominee_resolved": next_name, "end_conversation": end_conversation,
+          "nominee_resolved": nominated, "end_conversation": end_conversation,
+          "discussion_stage": "opening" if opening else "nomination",
+          "nomination_enabled": nomination_enabled,
+          "scheduled_next_identity": next_name,
+          "nomination_source": source,
+          "judge_intervention_id": judgment.get("event_id") if judgment else None,
           "call_ids": observed_turn.get("call_ids", []),
           "nomination_fallback": getattr(current_persona, "nomination_fallback", None),
-          "nominee_options": [] if end_conversation else [p.identity.name for p in target_personas],
-          "nominee_options_rendered": [] if end_conversation else [render_name(p.identity) for p in target_personas],
+          "nominee_options": [] if not nomination_enabled else [p.identity.name for p in target_personas],
+          "nominee_options_rendered": [] if not nomination_enabled else [render_name(p.identity) for p in target_personas],
       })
 
       current_conversation.append(

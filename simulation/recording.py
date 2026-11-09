@@ -1,6 +1,7 @@
 """B8 observational raw data capture around original simulation components."""
 
 import copy
+import sqlite3
 import datetime
 import gzip
 import hashlib
@@ -70,7 +71,8 @@ class RunRecorder:
         self.ctx = None
         self.pending_sdk_response = threading.local()
         self.call_ids_by_agent = {}
-        for file in ("calls", "cycles", "utterances", "agents", "errors", "transport_events"):
+        self.nomination_table_path = Path(__file__).resolve().parents[1] / "runs/.control/nomination_judgments.sqlite"
+        for file in ("calls", "cycles", "utterances", "agents", "errors", "transport_events", "nomination_judgments"):
             with gzip.open(self.path / f"{file}.jsonl.gz", "wt", encoding="utf-8"):
                 pass
 
@@ -128,8 +130,25 @@ class RunRecorder:
         persona.retrieve.retrieve = observed
         persona.retrieve._recording_attached = True
 
+    def record_nomination_judgment(self, event):
+        event = {"event_id": f"{self.run_id}-nomination-{event['cycle']}-{event['position']}",
+                 "run_id": self.run_id, "condition": self.condition, "seed": self.seed,
+                 "timestamp": utc_now(), **event}
+        self.write("nomination_judgments", event)
+        if self.provider != "stub":
+            path = self.nomination_table_path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with sqlite3.connect(path, timeout=60) as db:
+                db.execute("CREATE TABLE IF NOT EXISTS nomination_judgments (event_id TEXT PRIMARY KEY, run_id TEXT, condition TEXT, seed INTEGER, cycle INTEGER, position INTEGER, resolution_source TEXT, resolved_identity TEXT, data TEXT)")
+                db.execute("INSERT INTO nomination_judgments VALUES (?,?,?,?,?,?,?,?,?)",
+                           (event["event_id"], self.run_id, self.condition, self.seed,
+                            event["cycle"], event["position"], event["resolution_source"],
+                            event["resolved_identity"], json.dumps(safe(event))))
+        return event
+
     def begin_chain(self, agent, phase, query):
         types_by_query = {
+            "nomination_judge": "nomination_judge",
             "choose_act_options": "harvest", "converse_utterance": "utterance",
             "prompt_summarize_conversation_in_one_sentence": "conversation_summary",
             "prompt_find_harvesting_limit_from_conversation": "limit_extraction",
@@ -268,6 +287,10 @@ class RunRecorder:
             "perceived_leadership": measurements.get("perceived_leadership") or None,
             "report_text": ctx.harvest_report, "conversation_summary": conversation.get("summary"),
             "agreed_limit": conversation.get("agreed_limit"), "opener": turns[0]["speaker_identity"] if turns else None,
+            "opening_order_key": f"opening_order|{self.seed}|{self.cycle}" if getattr(ctx.cfg.agent, "round_robin_discussion", False) else None,
+            "opening_opener_key": f"opener|{self.seed}|{self.cycle}" if getattr(ctx.cfg.agent, "round_robin_discussion", False) else None,
+            "opening_order": [t["speaker_identity"] for t in turns if t.get("discussion_stage") == "opening"] if getattr(ctx.cfg.agent, "round_robin_discussion", False) else None,
+            "opening_handoff": next((t for t in turns if t.get("discussion_stage") == "opening" and t.get("nomination_enabled")), None) if getattr(ctx.cfg.agent, "round_robin_discussion", False) else None,
             "number_of_utterances": len(turns), "framework_messages": conversation.get("framework_messages"),
             "end_reason": conversation.get("end_reason"), "collapse": self.collapsed,
             "leavers": [p.identity.name for p in ctx.personas.values() if getattr(p.identity, "stakes_months_remaining", None) == 1],
@@ -307,6 +330,7 @@ class RunRecorder:
             "max_tokens": {"generation": getattr(self.config.experiment.agent, "study_generation_max_tokens", 8000), "fresh_importance": 1000}, "thinking": "default; no budget or effort set",
             "paper_definitions": bool(getattr(self.config.experiment.agent, "paper_definitions", False)),
             "neutral_study": bool(getattr(self.config.experiment.agent, "neutral_study", False)),
+            "round_robin_discussion": bool(getattr(self.config.experiment.agent, "round_robin_discussion", False)),
             "truncation_policy": "repository_parser_fixed_caps",
             "pip_freeze": subprocess.check_output([os.sys.executable, "-m", "pip", "freeze", "--disable-pip-version-check"], text=True).splitlines(),
             "python": platform.python_version(), "os": platform.platform(), "start_time": self.started, "end_time": utc_now(),

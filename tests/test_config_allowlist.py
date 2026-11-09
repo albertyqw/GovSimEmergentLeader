@@ -30,7 +30,7 @@ class ConfigAllowlistTest(unittest.TestCase):
             ("env", "num_agents"), ("env", "initial_resource_in_pool"), ("env", "collapse_threshold"),
             ("personas", "num"), ("agent", "leader_population"), ("agent", "values_plan"),
             ("agent", "stakes_tenure"), ("agent", "lake_scale"), ("agent", "act", "drop_mayor_line"),
-            ("env", "paper_definitions"), ("agent", "paper_definitions"), ("agent", "study_generation_max_tokens"), ("agent", "neutral_study"),
+            ("env", "paper_definitions"), ("agent", "paper_definitions"), ("agent", "study_generation_max_tokens"), ("agent", "neutral_study"), ("agent", "round_robin_discussion"),
         }
         allowed.update(("agent", "converse", flag) for flag in (
             "neutral_announcer", "drop_truthfulness_line", "seeded_opener", "elicitation", "perceived_leadership"

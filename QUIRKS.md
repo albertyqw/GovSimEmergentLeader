@@ -111,3 +111,9 @@ The user has now authorized retaining that original fixed-cap parser behavior fo
 ## User-approved neutral amendment supersedes selected quirks
 
 The first Flash pilot confirmed missing first-harvest group size and invalid `Anonymous Leader`/open-ended nominations. The user authorized an explicit count, no scripted leadership cues in any arm, and uniform random invalid-nomination fallback. These are new study departures from the paper/repository, guarded by `agent.neutral_study`. Original parsers and disabled branches remain; other reflection/default quirks are unchanged. The old first-option/Julia fallback still documents historical data but does not govern new neutral runs.
+
+## Two-stage discussion departure (explicitly approved)
+
+Every present agent now gets one opening turn, regardless of an attempted early close. Only the last opening turn nominates; all remaining turns are nomination-driven. Framework messages still count toward 50, leaving 17 nomination-phase utterances at N32 versus 41 at N8 when the full allowance is used. Initial equal airtime is imposed by the protocol; it is not evidence of decentralized free discussion.
+
+A hidden judge may make a contextual speaker choice after an invalid nomination. Such assisted routing can shape the network; raw graph events remain labeled agent/judge/random/fixed opening and phase-specific summaries expose routing-source counts. Judge reasons are never shown to agents. Valid-name patterns and disabled old paths remain available; the new utterance branch uses one generation, so missing nominee fields go directly to the approved judge rather than requesting additional agent output.

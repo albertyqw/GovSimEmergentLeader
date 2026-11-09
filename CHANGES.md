@@ -142,3 +142,15 @@ No original reflection regex, retrieval scores, allocation algorithm, regenerati
 - B8/B10/B11: record six validated neutral-profile smokes and reconciled spending, the N32 partial-response 300-ton request/collapse, one applied random nominee fallback (Everyone to Tariq), and handled 429 counts. Preserve the initial pilot and original final-runs tag; prepare only the user-started replacement pilot.
 
 - B8/B9: attach the same nomination fallback metadata after select when parsing creates a separate SDK request; extend forced-invalid tests to that follow-up case. Five recording tests pass; audit confirms all six existing paid smokes already have correct raw/fallback status, with no affected data or payload changes.
+
+## B2/B5/B6/B8/B9/B10/B11 two-stage discussion and hidden contextual judge
+
+- METHODS.md / parent copy: record the approved mandatory opening, final-opening handoff, hidden contextual judge, 50-total-message cap, separate running intervention table and stage-specific measures/nulls. Preserve prior attempts/tags; replacement source uses final-runs-v3.
+- All ten study YAMLs: guarded `agent.round_robin_discussion` enables the protocol in every condition, including modified reference.
+- `interventions.py`: four exact B5 stage/judge task constants. `intervention_randomness.py`: common keyed opener plus separately shuffled remaining household slots.
+- `two_stage_discussion.py` (new), guarded entry in `converse_prompts.py`, turn loop in `converse.py`: guarantee each opening voice, ignore opening close attempts, enable last-opening nomination, retain valid-name patterns, and use a separately recorded judge chain before routing invalid nominees. Preserve native converse response logs.
+- Judge may resolve intent or choose contextually; unclear/malformed/ineligible outputs use recorded uniform random choice. No judge material enters the conversation, agent context, memory or private instruments. Transport/financial safeguards and fixed caps remain.
+- `recording.py`: new call type, metadata protocol flag, opening order/keys/handoff, stage/source turn fields, per-run intervention JSONL and append-only shared SQLite table. `tools/nomination_table.py` (new) exports a readable TSV snapshot.
+- `study_analysis.py`, `check_data.py`: measure each phase separately, preserve mandatory turns in the null, redraw the initial nomination handoff, validate coverage/cap/routing/intervention call links, and report judge/random counts.
+- Twelve-constant/config/legacy-profile tests, new `test_two_stage_discussion.py`, stub transport and fidelity generator/golden fixtures: verify opening coverage, cap, valid bypass, judge context/intent choices, random fallback, privacy, table append behavior and disabled-path byte fidelity.
+- DATA.md / RUNBOOK.md / QUIRKS.md / TEST_RESULTS.md / SMOKE_REPORT.md describe protocol version, limits, new schemas and preserved historical evidence.
