@@ -6,6 +6,7 @@ https://openrouter.ai/docs/api/api-reference/generations/get-generation
 """
 
 import datetime
+import copy
 import json
 import os
 import time
@@ -73,14 +74,20 @@ def attach_openrouter(model, recorder, budget, pricing, sleep=time.sleep, get=au
             return
         record["http_attempts"] = record.get("http_attempts", 0) + 1
         record["retry_count"] = record["http_attempts"] - 1
-        if response.status_code < 400:
-            return
         response.read()
         try:
             body = response.json()
         except Exception:
             body = {"message": "Non-JSON error response"}
-        reason = find_reason(body)
+        try:
+            record["request"] = json.loads(response.request.content)
+        except (AttributeError, ValueError, TypeError):
+            pass
+        recorder.write("transport_events", {"timestamp": utc_now(), "event": "http_response", "call_id": record["call_id"],
+                                            "http_status": response.status_code, "request": record["request"], "body": safe(body)})
+        if response.status_code < 400:
+            return
+        reason = safe(find_reason(body))
         code = response.status_code
         fatal = code == 403 or (code == 402 and reason != "in_flight_budget_exhausted")
         recorder.write("errors", {
@@ -105,6 +112,8 @@ def attach_openrouter(model, recorder, budget, pricing, sleep=time.sleep, get=au
         reservation = input_bound * float(pricing["prompt"]) + kwargs["max_tokens"] * float(pricing["completion"])
         budget.wait_for_turn(recorder.run_id)
         budget.reserve(call_id, reservation)
+        reservation_id = call_id
+        completed_cost = 0.0
         attempt = 0
         transient_budget_errors = 0
         while True:
@@ -112,22 +121,36 @@ def attach_openrouter(model, recorder, budget, pricing, sleep=time.sleep, get=au
             try:
                 response = original_create(**kwargs)
                 raw = response.model_dump(mode="json")
+                raw["_sdk_original"] = copy.deepcopy(raw)
                 recorder.pending_sdk_response.value = raw
                 choice = (raw.get("choices") or [{}])[0]
                 if choice.get("finish_reason") == "error":
                     error = raw.get("error", choice.get("error", {}))
                     code = error.get("code") if isinstance(error, dict) else None
-                    if code == 429:
+                    if str(code) == "429":
+                        partial_cost = (raw.get("usage") or {}).get("cost")
+                        if partial_cost is None and raw.get("id"):
+                            partial_cost = get("generation?" + urllib.parse.urlencode({"id": raw["id"]}))["data"]["total_cost"]
+                        partial_cost = partial_cost or 0.0
+                        budget.settle(reservation_id, partial_cost)
+                        completed_cost += partial_cost
+                        record["transport_cost"] = completed_cost
+                        record.setdefault("attempt_completions", []).append(raw)
                         recorder.write("errors", {"timestamp": utc_now(), "call_id": call_id,
                                                    "type": 429, "reason": safe(error), "retry_after": None,
                                                    "resolution": "retry_scheduled"})
                         attempt += 1
                         record["retry_count"] += 1
                         sleep(retry_delay(None, attempt))
+                        reservation_id = f"{call_id}/attempt{attempt}"
+                        budget.reserve(reservation_id, reservation)
                         continue
                     budget.halt("OpenRouter returned an error completion")
                 usage = raw.get("usage") or {}
-                if usage.get("cost") is None or not raw.get("provider"):
+                if usage.get("cost") is not None:
+                    budget.settle(reservation_id, usage["cost"])
+                    record["transport_cost"] = completed_cost + usage["cost"]
+                if usage.get("cost") is None or not raw.get("provider") or usage.get("prompt_tokens_details") is None or usage.get("completion_tokens_details") is None:
                     generation = None
                     for metadata_attempt in range(6):
                         try:
@@ -143,8 +166,17 @@ def attach_openrouter(model, recorder, budget, pricing, sleep=time.sleep, get=au
                     usage["cost"] = generation.get("total_cost")
                     raw["provider"] = generation.get("provider_name")
                     raw["generation_metadata"] = generation
+                    if usage.get("prompt_tokens") is None:
+                        usage["prompt_tokens"] = generation.get("tokens_prompt", generation.get("native_tokens_prompt"))
+                    if usage.get("completion_tokens") is None:
+                        usage["completion_tokens"] = generation.get("tokens_completion", generation.get("native_tokens_completion"))
+                    if usage.get("prompt_tokens_details") is None:
+                        usage["prompt_tokens_details"] = {"cached_tokens": generation.get("native_tokens_cached")}
+                    if usage.get("completion_tokens_details") is None:
+                        usage["completion_tokens_details"] = {"reasoning_tokens": generation.get("native_tokens_reasoning")}
                     raw["usage"] = usage
-                budget.settle(call_id, usage.get("cost"))
+                budget.settle(reservation_id, usage.get("cost"))
+                record["transport_cost"] = completed_cost + usage["cost"]
                 if raw.get("provider") not in ("Google AI Studio", recorder.provider):
                     budget.halt("Served provider did not match the pinned provider")
                 if raw.get("model") != kwargs["model"]:
@@ -156,21 +188,23 @@ def attach_openrouter(model, recorder, budget, pricing, sleep=time.sleep, get=au
                 raise
             except Exception as error:
                 status = getattr(error, "status_code", None)
-                reason = find_reason(getattr(error, "body", None))
+                reason = safe(find_reason(getattr(error, "body", None)))
                 if status == 403 or (status == 402 and reason != "in_flight_budget_exhausted"):
-                    budget.release_unbilled(call_id)
+                    budget.release_unbilled(reservation_id)
                     budget.halt(f"OpenRouter HTTP {status}: {reason or 'credit, key, or budget failure'}")
-                    raise
+                    raise StudyHalt(safe(str(error))) from None
                 if status == 402 and reason == "in_flight_budget_exhausted":
                     transient_budget_errors += 1
                     if transient_budget_errors >= 3:
                         budget.capacity_limit(reduce=True)
                         budget.wait_for_turn(recorder.run_id)
-                elif status not in (429, 500, 502, 503, 504):
+                elif status not in (429, 500, 502, 503, 504) and not (
+                    status == 404 and "no endpoints" in str(getattr(error, "body", "")).lower()
+                ):
                     # Preserve the reservation when a transport failure leaves
                     # billing uncertain; subsequent calls must not spend it.
                     budget.halt("Unreconciled API or transport failure")
-                    raise
+                    raise StudyHalt(safe(str(error))) from None
                 attempt += 1
                 headers = getattr(getattr(error, "response", None), "headers", {})
                 sleep(retry_delay(headers.get("Retry-After"), attempt))

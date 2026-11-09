@@ -3,6 +3,7 @@
 import copy
 import datetime
 import gzip
+import hashlib
 import json
 import os
 import platform
@@ -42,7 +43,8 @@ class RunRecorder:
         self.path = Path(path)
         self.path.mkdir(parents=True, exist_ok=False)
         self.condition = condition
-        self.run_id = f"{condition}-seed{seed}-{self.path.name}"
+        path_id = hashlib.sha256(str(self.path.resolve()).encode()).hexdigest()[:16]
+        self.run_id = f"{condition}-seed{seed}-{path_id}"
         self.seed = seed
         self.config = resolved_config
         self.provider = provider
@@ -55,11 +57,13 @@ class RunRecorder:
         self.phase = "initialization"
         self.agents = {}
         self.started = utc_now()
+        root = Path(__file__).resolve().parents[1]
+        self.commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
         self.finalized = False
         self.ctx = None
         self.pending_sdk_response = threading.local()
         self.call_ids_by_agent = {}
-        for file in ("calls", "cycles", "utterances", "agents", "errors"):
+        for file in ("calls", "cycles", "utterances", "agents", "errors", "transport_events"):
             with gzip.open(self.path / f"{file}.jsonl.gz", "wt", encoding="utf-8"):
                 pass
 
@@ -187,8 +191,10 @@ class RunRecorder:
             if error:
                 record["parse_status"] = "failed"
                 record["parse_error"] = safe(str(error))
+                record.setdefault("parse_operations", []).append({"name": name, "status": "failed", "error": safe(str(error))})
             else:
                 record["parsed_output"][name] = value
+                record.setdefault("parse_operations", []).append({"name": name, "status": "ok", "value": value})
 
     def cycle_start(self, ctx):
         self.cycle = ctx.round_num + 1
@@ -263,6 +269,8 @@ class RunRecorder:
         if self.finalized:
             return
         for record in list(self.buffers.values()):
+            if record["parse_status"] == "pending":
+                record["parse_status"] = "failed" if record["error"] else "ok"
             self.write("calls", record)
         self.buffers.clear()
         for record in self.agents.values():
@@ -271,7 +279,9 @@ class RunRecorder:
         root = Path(__file__).resolve().parents[1]
         metadata = {
             "condition": self.condition, "N": self.config.experiment.env.num_agents, "seed": self.seed,
-            "commit_hash": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
+            "run_id": self.run_id,
+            "commit_hash": self.commit_hash,
+            "end_commit_hash": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
             "resolved_config": cfg, "model": self.config.llm.path.removeprefix("openrouter-"),
             "provider_routing": {"only": [self.provider], "allow_fallbacks": False},
             "temperature": self.config.llm.temperature, "top_p": self.config.llm.top_p,
@@ -282,6 +292,8 @@ class RunRecorder:
             "collapse_cycle": self.cycle if getattr(self, "collapsed", False) else None, "error": error,
             "values_focal": next((row for row in self.agents.values() if row["focal_values"]), None),
             "stakes_schedule": self.ctx.tenure.schedule if self.ctx and hasattr(self.ctx, "tenure") else None,
+            "run_kind": getattr(self, "kind", "stub" if self.provider == "stub" else "full"),
+            "first_stakes_run": getattr(self, "first_stakes_run", False),
         }
         with (self.path / "run_meta.json").open("x") as output:
             json.dump(safe(metadata), output, indent=2)
@@ -298,6 +310,8 @@ class RecordingWrapper(ModelWandbWrapper):
             call_id = recorder.begin_call(model, chat, temperature, top_p, max_tokens)
             record = recorder.buffers[call_id]
             started = time.monotonic()
+            recorder.write("transport_events", {"timestamp": utc_now(), "event": "request", "call_id": call_id,
+                                                "request": record["request"]})
             try:
                 text = original_request(chat, temperature, top_p, max_tokens)
                 raw = getattr(recorder.pending_sdk_response, "value", None)
@@ -311,11 +325,11 @@ class RecordingWrapper(ModelWandbWrapper):
                 record["raw_completion"] = raw
                 record["model_served"] = raw.get("model")
                 record["provider"] = raw.get("provider", recorder.provider)
-                usage = raw.get("usage", {})
+                usage = raw.get("usage") or {}
                 record["tokens"] = {"input": usage.get("prompt_tokens"), "output": usage.get("completion_tokens"),
-                                    "reasoning": (usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0),
-                                    "cached": (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0)}
-                record["cost"] = usage.get("cost")
+                                    "reasoning": (usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0 if recorder.provider == "stub" else None),
+                                    "cached": (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0 if recorder.provider == "stub" else None)}
+                record["cost"] = record.get("transport_cost", usage.get("cost"))
                 choice = (raw.get("choices") or [{}])[0]
                 record["finish_reason"] = choice.get("finish_reason")
                 message = choice.get("message") or {}
@@ -323,6 +337,11 @@ class RecordingWrapper(ModelWandbWrapper):
                 record["generation_id"] = raw.get("id")
                 return text
             except Exception as error:
+                raw = getattr(recorder.pending_sdk_response, "value", None)
+                if raw is not None:
+                    record["raw_completion"] = raw
+                    record["cost"] = record.get("transport_cost", (raw.get("usage") or {}).get("cost"))
+                    recorder.pending_sdk_response.value = None
                 record["error"] = safe(str(error))
                 record["parse_status"] = "failed"
                 raise

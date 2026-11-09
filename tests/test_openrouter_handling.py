@@ -19,6 +19,37 @@ class APIError(Exception):
 
 
 class OpenRouterHandlingTest(unittest.TestCase):
+    def test_partial_429_cost_is_counted_before_retry(self):
+        with tempfile.TemporaryDirectory() as temp:
+            recorder = RunRecorder(Path(temp) / "seed0", "replica_N8", 0,
+                                   compose_study_config("replica_N8", 0, cycles=1), provider="google-ai-studio")
+            budget = SharedBudget(Path(temp) / "budget.sqlite")
+            partial = {"id": "gen-partial", "choices": [{"finish_reason": "error", "error": {"code": 429}}],
+                       "usage": {"cost": 0.002}}
+            complete = {"id": "gen-complete", "model": "google/gemini-2.5-flash", "provider": "Google AI Studio",
+                        "choices": [{"finish_reason": "stop", "message": {"content": "Answer: 2"}}],
+                        "usage": {"prompt_tokens": 20, "completion_tokens": 5, "cost": 0.003,
+                                  "prompt_tokens_details": {"cached_tokens": 0},
+                                  "completion_tokens_details": {"reasoning_tokens": 0}}}
+            responses = iter((partial, complete))
+            def original(**kwargs):
+                raw = next(responses)
+                return SimpleNamespace(model_dump=lambda **kw: raw)
+            model = SimpleNamespace(model_name="google/gemini-2.5-flash", seed=0,
+                                    client=SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=original)),
+                                                           _client=SimpleNamespace(event_hooks={"response": []})))
+            recorder.begin_chain("Julia", "harvesting", "choose_act_options")
+            messages = [{"role": "user", "content": "Local test"}]
+            call_id = recorder.begin_call(model, messages, 0, 1, 8000)
+            attach_openrouter(model, recorder, budget, {"prompt": "0.0000003", "completion": "0.0000025"},
+                              sleep=lambda _: None, get=lambda _: self.fail("Unexpected network metadata lookup"))
+            model.client.chat.completions.create(model=model.model_name, messages=messages, max_tokens=8000)
+            self.assertEqual(budget.totals(), (0.005, 0))
+            record = recorder.buffers[call_id]
+            self.assertEqual(record["transport_cost"], 0.005)
+            self.assertEqual(len(record["attempt_completions"]), 1)
+            self.assertEqual(record["retry_count"], 1)
+
     def test_transient_budget_retries_reduce_parallel_seeds_and_preserve_parameters(self):
         with tempfile.TemporaryDirectory() as temp:
             cfg = compose_study_config("replica_N8", 0, cycles=1)
@@ -43,7 +74,9 @@ class OpenRouterHandlingTest(unittest.TestCase):
             recorder.begin_chain("Julia", "harvesting", "choose_act_options")
             messages = [{"role": "user", "content": "Local test"}]
             recorder.begin_call(model, messages, 0, 1, 8000)
-            attach_openrouter(model, recorder, budget, {"prompt": "0.0000003", "completion": "0.0000025"}, sleep=lambda _: None)
+            attach_openrouter(model, recorder, budget, {"prompt": "0.0000003", "completion": "0.0000025"},
+                              sleep=lambda _: None, get=lambda _: {"data": {"total_cost": 0.001,
+                                  "provider_name": "Google AI Studio", "native_tokens_cached": 0, "native_tokens_reasoning": 0}})
             kwargs = dict(model=model.model_name, messages=messages, temperature=0.0, top_p=1.0, seed=0, max_tokens=8000)
             model.client.chat.completions.create(**kwargs)
             self.assertEqual(len(attempts), 4)
@@ -69,7 +102,7 @@ class OpenRouterHandlingTest(unittest.TestCase):
             messages = [{"role": "user", "content": "Local test"}]
             recorder.begin_call(model, messages, 0, 1, 8000)
             attach_openrouter(model, recorder, budget, {"prompt": "0.0000003", "completion": "0.0000025"}, sleep=lambda _: None)
-            with self.assertRaises(APIError):
+            with self.assertRaises(StudyHalt):
                 model.client.chat.completions.create(model=model.model_name, messages=messages, max_tokens=8000)
             with self.assertRaises(StudyHalt):
                 budget.check()
