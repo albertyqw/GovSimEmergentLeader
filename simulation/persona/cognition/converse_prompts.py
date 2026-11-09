@@ -55,7 +55,8 @@ def prompt_converse_utterance_in_group(
     )
     if svo_prompt:
       lm += f"{svo_prompt}\n"
-    lm += f"{disinfo_prompt}\n"
+    if not getattr(init_persona.cfg.converse, "drop_truthfulness_line", False):
+      lm += f"{disinfo_prompt}\n"
     lm += f"{leader_prompt}\n"
     lm += "\nConversation so far:\n"
     conv_str = cognition_utils.conversation_to_string_with_dash(

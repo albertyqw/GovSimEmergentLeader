@@ -9,6 +9,8 @@ from simulation.persona.cognition import component
 from simulation.persona.cognition import converse_prompts
 from simulation.persona.cognition import reflect_prompts
 from simulation.persona.cognition import retrieve as retrieve_mod
+from simulation.interventions import ANNOUNCER_TEMPLATE
+from simulation.intervention_randomness import opener_slot
 
 
 class ConverseComponent(component.Component):
@@ -36,6 +38,8 @@ class ConverseComponent(component.Component):
       harvest_report: str | None = None,
       leader_persona=None,
       debug: bool = False,
+      intervention_seed: int | None = None,
+      intervention_cycle: int | None = None,
   ) -> tuple[list[tuple[str, str]], str]:
     """Conduct a group conversation among personas."""
     current_conversation: list[
@@ -46,9 +50,12 @@ class ConverseComponent(component.Component):
     if leader_persona:
       current_leader_id = leader_persona.identity
     else:
-      current_leader_id = common.PersonaIdentity(
-          "framework", "Anonymous Leader",
-      )
+      if getattr(self.cfg, "neutral_announcer", False):
+        current_leader_id = common.PersonaIdentity("framework", "Announcer")
+      else:
+        current_leader_id = common.PersonaIdentity(
+            "framework", "Anonymous Leader",
+        )
 
     if (
         self.cfg.inject_resource_observation
@@ -76,17 +83,22 @@ class ConverseComponent(component.Component):
         and self.cfg.inject_resource_observation_strategy
         == "manager"
     ):
-      current_conversation.append(
-          (
-              current_leader_id,
-              (
-                  f"I, {current_leader_id.name}, will lead"
-                  " the group this cycle. Fellow citizens,"
-                  " let me give you the monthly fishing"
-                  f" report:\n{harvest_report}"
-              ),
-          ),
-      )
+      if getattr(self.cfg, "neutral_announcer", False) and not leader_persona:
+        current_conversation.append(
+            (current_leader_id, ANNOUNCER_TEMPLATE.format(report=harvest_report))
+        )
+      else:
+        current_conversation.append(
+            (
+                current_leader_id,
+                (
+                    f"I, {current_leader_id.name}, will lead"
+                    " the group this cycle. Fellow citizens,"
+                    " let me give you the monthly fishing"
+                    f" report:\n{harvest_report}"
+                ),
+            ),
+        )
       if mayoral_agenda and leader_persona:
         current_conversation.append(
             (
@@ -105,7 +117,14 @@ class ConverseComponent(component.Component):
     if leader_persona:
       current_persona = leader_persona
     else:
-      current_persona = random.choice(target_personas)
+      if getattr(self.cfg, "seeded_opener", False):
+        if intervention_seed is None or intervention_cycle is None:
+          raise ValueError("Seeded openers require an experiment seed and cycle")
+        current_persona = target_personas[
+            opener_slot(intervention_seed, intervention_cycle, len(target_personas))
+        ]
+      else:
+        current_persona = random.choice(target_personas)
 
     while True:
       focal_points = [current_context]

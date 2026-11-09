@@ -59,6 +59,11 @@ class DiscussionPhase(Phase):
           harvest_report=agent.harvest_report,
           leader_persona=agent.current_leader,
           debug=ctx.debug,
+          **(
+              {"intervention_seed": ctx.cfg.seed, "intervention_cycle": ctx.round_num + 1}
+              if getattr(agent.cfg.converse, "seeded_opener", False)
+              else {}
+          ),
       )
 
       action = PersonaActionChat(
