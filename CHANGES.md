@@ -81,3 +81,5 @@ The A10 coordination nulls keep the recorded opener and utterance count for airt
 - B8 smoke repair: `simulation/recording.py` matches observed retrieved text to node IDs using the original Markdown reader's empty-line normalization and stable duplicate order, without changing retrieval or storage. `tests/stub_llm.py` and `tests/test_recording.py` exercise multiline memory descriptions end to end. The first two paid smoke attempts are preserved and rerun in fresh directories; all costs remain in the shared ledger.
 
 - B11 launcher audit: a halted first stakes attempt does not satisfy the first-completed-run gate. Keep its restart alone and apply the early-collapse STOP rule to the first finished attempt. Checked the actual gate block with temporary failed/collapsed metadata fixtures; no full worker was started.
+
+- B12 final audit: an error completion with unknown actual cost halts and retains its worst-case reservation instead of assuming zero cost. The local SDK test verifies this conservative accounting path; paid smoke attempts have not exercised this error path.

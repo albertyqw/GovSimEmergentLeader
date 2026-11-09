@@ -19,6 +19,29 @@ class APIError(Exception):
 
 
 class OpenRouterHandlingTest(unittest.TestCase):
+    def test_unknown_partial_cost_halts_and_preserves_reservation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            recorder = RunRecorder(Path(temp) / "seed0", "replica_N8", 0,
+                                   compose_study_config("replica_N8", 0, cycles=1), provider="google-ai-studio")
+            budget = SharedBudget(Path(temp) / "budget.sqlite")
+            raw = {"choices": [{"finish_reason": "error", "error": {"code": 429}}], "usage": {}}
+            model = SimpleNamespace(model_name="google/gemini-2.5-flash", seed=0,
+                                    client=SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(
+                                        create=lambda **kwargs: SimpleNamespace(model_dump=lambda **kw: raw))),
+                                        _client=SimpleNamespace(event_hooks={"response": []})))
+            recorder.begin_chain("Julia", "harvesting", "choose_act_options")
+            messages = [{"role": "user", "content": "Local test"}]
+            recorder.begin_call(model, messages, 0, 1, 8000)
+            attach_openrouter(model, recorder, budget, {"prompt": "0.0000003", "completion": "0.0000025"},
+                              sleep=lambda _: None, get=lambda _: self.fail("No generation ID is available"))
+            with self.assertRaisesRegex(StudyHalt, "actual cost"):
+                model.client.chat.completions.create(model=model.model_name, messages=messages, max_tokens=8000)
+            spent, pending = budget.totals()
+            self.assertEqual(spent, 0)
+            self.assertGreater(pending, 0)
+            with self.assertRaises(StudyHalt):
+                budget.check()
+
     def test_partial_429_cost_is_counted_before_retry(self):
         with tempfile.TemporaryDirectory() as temp:
             recorder = RunRecorder(Path(temp) / "seed0", "replica_N8", 0,

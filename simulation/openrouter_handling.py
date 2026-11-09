@@ -131,7 +131,12 @@ def attach_openrouter(model, recorder, budget, pricing, sleep=time.sleep, get=au
                         partial_cost = (raw.get("usage") or {}).get("cost")
                         if partial_cost is None and raw.get("id"):
                             partial_cost = get("generation?" + urllib.parse.urlencode({"id": raw["id"]}))["data"]["total_cost"]
-                        partial_cost = partial_cost or 0.0
+                        if partial_cost is None:
+                            recorder.write("errors", {"timestamp": utc_now(), "call_id": call_id,
+                                                       "type": 429, "reason": safe(error), "retry_after": None,
+                                                       "resolution": "halted_unreconciled_cost"})
+                            budget.halt("Partial error response has no reconcilable actual cost")
+                            raise StudyHalt("Partial error response has no reconcilable actual cost")
                         budget.settle(reservation_id, partial_cost)
                         completed_cost += partial_cost
                         record["transport_cost"] = completed_cost
