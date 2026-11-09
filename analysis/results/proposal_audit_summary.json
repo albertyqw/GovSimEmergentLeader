@@ -1,0 +1,21 @@
+{
+ "tuning_sample": {
+  "key": "analysis|audit|proposals",
+  "n": 100,
+  "errors_first_version": 25,
+  "errors_final": 9,
+  "note": "used for development; optimistic",
+  "errors_with_plausibility_rule": 9
+ },
+ "holdout_sample": {
+  "key": "analysis|audit|proposals|holdout",
+  "n": 100,
+  "errors_final": 19,
+  "false_positive": 11,
+  "missed": 8,
+  "note": "drawn after the extractor was frozen; unbiased error estimate",
+  "errors_with_plausibility_rule": 18
+ },
+ "labeler": "Claude (definition: forward-looking per-person catch the speaker advocates for the coming month, incl. endorsing another's number; range -> lower bound). user_label column left blank for your check.",
+ "plausibility_rule": "per-person proposals above 25 tons (2 x capacity/N) are discarded; added after both audits"
+}

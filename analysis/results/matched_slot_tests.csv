@@ -1,0 +1,5 @@
+contrast,measure,pairs,mean_diff,wilcoxon_p_two_sided
+stakes_N8,peer_nom_share,5,0.09841827478146131,0.14412703481601533
+stakes_N8,in_degree_pct,5,0.054761904761904755,0.125
+values_N8,peer_nom_share,5,0.22761972690557203,0.3125
+values_N8,in_degree_pct,5,0.17380952380952386,0.125

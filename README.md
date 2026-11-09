@@ -1,5 +1,7 @@
 # AgentElect: Governance of the Commons Simulation with Elections
 
+> **Emergent-leadership fork (branch `emergent-leadership`).** This fork runs the study *Conditions for Emergent Leadership in GovSim*. Results, figures and how to reproduce them are in [`REPORT.md`](REPORT.md); analysis code and tables are in [`analysis/`](analysis/). The original AgentElect README follows.
+
 AgentElect extends the [GovSim](https://github.com/giorgiopiatti/GovSim) framework to study how leadership structures affect collective resource management. This project is primarily designed to produce **reproducible results** for comparing three population leadership variants:
 
 - **Elected-Leader**: Leaders are chosen through an election process among agents.
