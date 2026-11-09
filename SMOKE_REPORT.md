@@ -1,9 +1,38 @@
-# Neutral amendment: fresh smokes pending
+# Neutral study smoke validation complete
 
-The user approved explicit group size, no scripted leadership cues in any arm, and keyed uniform random invalid-nomination fallback. All earlier smokes and the initial Flash pilot are preserved but superseded for this profile. Caps remain fixed at 16000/1000; all previous spending remains in the ledger ($0.74568173 before the new smokes). All six condition smokes must validate before a user-started replacement pilot on final-runs-v2.
+All six seed-0, one-cycle Flash-Lite smokes passed `check_data.py` with 1000 null replicates on source commit `499f8d2`. Every run records the same start/end commit, `neutral_study: true`, correct participant counts, common paper settings, and fixed 16000/1000 caps. The initial full pilot and all earlier attempts remain preserved and superseded. No replacement full Flash pilot has started.
+
+| Condition | Attempt | Calls | Seconds | Requested tons | Final stock | Cost USD | Length | 429 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| replica_N8 | seed0_attempt5 | 106 | 117.4 | 43 | 100 | 0.02361730 | 0 | 86 |
+| baseline_N8 | seed0_attempt5 | 122 | 116.7 | 43 | 100 | 0.02436048 | 0 | 80 |
+| values_N8 | seed0_attempt3 | 118 | 125.1 | 44 | 100 | 0.02493326 | 0 | 75 |
+| stakes_N8 | seed0_attempt3 | 125 | 101.9 | 51 | 98 | 0.02654040 | 0 | 2 |
+| coord_N16 | seed0_attempt3 | 236 | 216.7 | 101 | 198 | 0.05532190 | 0 | 14 |
+| coord_N32 | seed0_attempt4 | 478 | 430.7 | 490 | 0 | 0.13889562 | 2 | 40 |
+
+## Diagnostics
+
+- All harvest decisions parsed numerically. Every applicable private instrument parsed at 100%; the replica intentionally has none.
+- Nomination failures were zero except N32: **one of 16 (6.25%)**, flagged above the 3% reporting threshold. Jack nominated `Everyone` at zero-based turn 10. The recorded key `nominee_fallback|0|1|10` uniformly selected Tariq from all 32 offered identities. Applied status, candidate, options, raw invalid nomination and actual next speaker agree. Julia is no longer a fixed fallback.
+- N32 Noah had two harvest length finishes (15940 and 15968 reported output tokens). The existing same-cap next-stage parser extracted option 300 from partial text. The group requested 490 tons from 400, exhausted the lake and collapsed. This is a preserved original numeric-parser consequence, not proof of a complete final model answer. No cap increase, new truncation retry or numeric-parser repair was made.
+- The other five conditions survived their single smoke cycle. These are short Flash-Lite observations, not full-model study results.
+- There were **297 recorded 429 events**, handled under the authorized retry policy, and zero 402 events. Concurrent smoke traffic produced substantial rate limiting; it affects runtime. The replacement pilot runs a single seed, and later-wave concurrency should be reviewed using full-model evidence. All attempts and actual costs remain counted.
+- Original reflection/evidence quirks and parse defaults remain logged. None of the newly authored general/task text assigns leadership; model-generated utterances and memories remain unmodified.
+
+## Verification, budget and handoff
+
+All 42 tests passed. A separate stricter prompt audit checked all six six-cycle native stub runs, including successors, and found no leader/leadership/mayor wording in the canned-run prompts; every general agent prompt contained the correct N. Forced-invalid nomination tests passed at N8/N32 and with stakes tags, including raw evidence, applied labels, valid next-speaker routing and global-RNG isolation. Disabled study overrides remain byte-identical to the pinned original payload fixture.
+
+Current six-smoke spending: **$0.29366896**. Cumulative project ledger: **$1.03935069**, including the superseded full pilot and every old smoke/retry/failed attempt. Pending reservations are zero, no halt is set, and the $90 guard remains active. Final authenticated GET reports usage $1.03935069, balance/limit_remaining $98.96064931 and key limit $100: exact agreement with the ledger to reported precision.
+
+A final logging-only correction also carries fallback draw/status onto a separate parser follow-up request. Five recording tests passed, including a forced invalid follow-up. Every existing smoke turn was audited against its raw parse operations and already has the correct applied status; no accepted smoke data are affected. Request fixture hashes are rechecked unchanged.
+
+Preserve `final-runs` at the old pilot source; tag the documentation-complete replacement source `final-runs-v2`. The user starts `./launch.sh replica_N8 0` in the existing govsim tmux shell; the changed resolved config allocates a fresh full attempt and preserves `runs/replica_N8/seed0`. Codex monitors the replacement pilot, reports under B11.2 and stops for review. No later seeds are started here.
 
 ---
 
+# Preserved earlier smoke reports
 # Fixed-cap smoke validation complete
 
 All six one-cycle, seed-0 Flash-Lite smokes passed `check_data.py` with 1000 null replicates on commit `4fdcbb90f299a937140e7d68c2b9f30bc484745e`. Start and end commits match for every attempt. The common paper profile and `repository_parser_fixed_caps` policy were enabled. Generation/find caps stayed 16000; fresh importance caps stayed 1000. No full Gemini 2.5 Flash run has started.

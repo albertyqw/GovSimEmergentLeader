@@ -184,6 +184,15 @@ def prompt_converse_utterance_in_group(
             default_value=fallback,
             chain=chain,
         )
+        if getattr(init_persona.cfg, "neutral_study", False):
+          recorder = getattr(model, "recorder", None)
+          if recorder is not None:
+            record = recorder.buffers.get(getattr(recorder.local, "current", None))
+            if record is not None:
+              draw = init_persona.nomination_fallback
+              draw["applied"] = any(op["name"] == "next_speaker" and op["status"] == "failed"
+                                    for op in record.get("parse_operations", []))
+              record["nomination_fallback"] = draw
         assert lm["next_speaker"] in options
         next_speaker = lm["next_speaker"]
         init_persona.last_nominee_raw = next_speaker

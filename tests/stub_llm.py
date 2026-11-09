@@ -37,8 +37,10 @@ class StubModel(ModelAPI):
                     next_name = next_name.lower()
                 elif self.nomination_style == "partial":
                     next_name = next_name[:3]
-            if self.nomination_style == "invalid":
+            if self.nomination_style in ("invalid", "invalid_followup"):
                 next_name = "Anonymous Leader"
+            if self.nomination_style == "invalid_followup":
+                next_name = ""
             transcript = prompt.rsplit("\nConversation so far:\n", 1)[1].split("\n\nTask:", 1)[0]
             previous_turns = len(re.findall(r"^-(?:" + "|".join(bare_names) + r")(?: \[.*?\])?:", transcript, re.M))
             ending = "yes" if previous_turns + 1 >= self.turns else "no"
@@ -62,6 +64,8 @@ class StubModel(ModelAPI):
             response = f"Preserve the {self.catch} ton agreement (because of 1)."
         else:
             raise AssertionError("Unrecognized stub call: " + prompt[-300:])
+        if self.nomination_style == "invalid_followup" and chat[-1]["content"].rstrip().endswith("Next speaker:"):
+            response = "Everyone"
         self.requests.append({
             "request": {
                 "model": self.model_name, "messages": copy.deepcopy(chat),

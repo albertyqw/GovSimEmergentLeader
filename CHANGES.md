@@ -138,3 +138,7 @@ No original reflection regex, retrieval scores, allocation algorithm, regenerati
 - `recording.py`, `check_data.py`: record/check neutral profile and nomination fallback key, options, candidate and applied status, preserving raw failure evidence.
 - Stub transport, condition/config/exact-text/recording tests: verify all six six-cycle conditions, eight exact constants, neutral/count prompt isolation, stakes succession and forced invalid-nomination routing at N8/N32 without global RNG calls.
 - `tools/build_fidelity.py`, regenerated golden diffs and FIDELITY.md: disclose new common overrides and retain byte-identical disabled-path control. DATA.md / RUNBOOK.md / QUIRKS.md / TEST_RESULTS.md / SMOKE_REPORT.md document the new schema, source version and preserved superseded results.
+
+- B8/B10/B11: record six validated neutral-profile smokes and reconciled spending, the N32 partial-response 300-ton request/collapse, one applied random nominee fallback (Everyone to Tariq), and handled 429 counts. Preserve the initial pilot and original final-runs tag; prepare only the user-started replacement pilot.
+
+- B8/B9: attach the same nomination fallback metadata after select when parsing creates a separate SDK request; extend forced-invalid tests to that follow-up case. Five recording tests pass; audit confirms all six existing paid smokes already have correct raw/fallback status, with no affected data or payload changes.

@@ -46,12 +46,13 @@ class RecordingTest(unittest.TestCase):
         from simulation.intervention_randomness import nomination_fallback
         import random
         selections = set()
-        for condition in ("replica_N8", "stakes_N8", "coord_N32"):
+        for condition, style in (("replica_N8", "invalid"), ("stakes_N8", "invalid"),
+                                 ("coord_N32", "invalid"), ("replica_N8", "invalid_followup")):
             with self.subTest(condition=condition), tempfile.TemporaryDirectory() as temp:
                 cfg = compose_study_config(condition, 0, cycles=1)
                 path = Path(temp) / "run"
                 recorder = RunRecorder(path, condition, 0, cfg)
-                wrapper = RecordingWrapper(StubModel(nomination_style="invalid", turns=5), recorder,
+                wrapper = RecordingWrapper(StubModel(nomination_style=style, turns=5), recorder,
                                            render=False, wanbd_logger=StubLogger(),
                                            temperature=0.0, top_p=1.0, seed=0, is_api=True)
                 with contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings(record=True):
@@ -66,7 +67,7 @@ class RecordingTest(unittest.TestCase):
                     expected = expected.split(" [", 1)[0]
                     self.assertEqual(turn["nominee_resolved"], expected)
                     self.assertEqual(following["speaker_identity"], expected)
-                    self.assertEqual(turn["nominee_raw"], "Anonymous Leader")
+                    self.assertEqual(turn["nominee_raw"], "Everyone" if style == "invalid_followup" else "Anonymous Leader")
                     selections.add(expected)
                 failures = [op for c in calls for op in c["parse_operations"]
                             if op["name"] == "next_speaker" and op["status"] == "failed"]
