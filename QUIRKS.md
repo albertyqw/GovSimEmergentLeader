@@ -117,3 +117,15 @@ The first Flash pilot confirmed missing first-harvest group size and invalid `An
 Every present agent now gets one opening turn, regardless of an attempted early close. Only the last opening turn nominates; all remaining turns are nomination-driven. Framework messages still count toward 50, leaving 17 nomination-phase utterances at N32 versus 41 at N8 when the full allowance is used. Initial equal airtime is imposed by the protocol; it is not evidence of decentralized free discussion.
 
 A hidden judge may make a contextual speaker choice after an invalid nomination. Such assisted routing can shape the network; raw graph events remain labeled agent/judge/random/fixed opening and phase-specific summaries expose routing-source counts. Judge reasons are never shown to agents. Valid-name patterns and disabled old paths remain available; the new utterance branch uses one generation, so missing nominee fields go directly to the approved judge rather than requesting additional agent output.
+
+## Agreed-limit extraction anomalies in v3 data (logged during analysis, 9 Nov 2026)
+
+Logged at the user's request from `ClaudeAnalysis/analysis` (Phase 1). This is the original framework limit-extraction call; it is not fixed, and the values stay in the analysis as stored.
+
+- `simulation/persona/cognition/reflect_prompts.py:124-166`: the prompt asks for a per-person limit, but `model.find(regex=r"\d+")` keeps only the first integer after "Answer:" (default -1 means no agreement). Totals, ranges and non-integer limits therefore collapse to one integer, and a numeric agreement framed differently can become 0.
+- Observed in `runs/v3` (cycle `agreed_limit` vs the framework's own conversation summary):
+  - `baseline_N8/seed4` cycle 4: **80**. The summary describes a dynamic guideline; 80 is not a per-person limit.
+  - `values_N8/seed3` cycle 4: **0**. The summary says the group aimed to leave 60–70 tons for regeneration; it does not describe a moratorium.
+  - Genuine 0-ton moratoria agree with their summaries: `baseline_N8/seed1` c5, `coord_N16/seed1` c4–c6, `coord_N16/seed3` c4–c5, `stakes_N8/seed3` c6.
+  - No limit (null) in 7 cycles where summaries describe totals or a framework rather than a per-person number: `baseline_N8/seed2` c1–c2, `stakes_N8/seed1` c1, `stakes_N8/seed4` c6, `values_N8/seed0` c5, `values_N8/seed2` c5, `values_N8/seed4` c3.
+- **Effect on analysis:** in H1a (values arm), `values_N8/seed3` c4 counts as a defined agreement that matches no proposal (all credit 0), and the values-arm null cycles are undefined. The baseline anomaly enters only descriptive convergence measures. All 1,516 elicited preferred limits are integers, so integer truncation does not change any adoption match.
