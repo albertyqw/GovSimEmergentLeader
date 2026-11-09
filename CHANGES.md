@@ -111,3 +111,5 @@ The A10 coordination nulls keep the recorded opener and utterance count for airt
 | DATA.md / RUNBOOK.md / SETUP_AUDIT.md / QUIRKS.md / TEST_RESULTS.md | B8/B10/B11 | Update current schemas, semantics, verification and historical-versus-current evidence. |
 
 No original reflection regex, retrieval scores, allocation algorithm, regeneration truncation or dependency pin was repaired or upgraded. The user-approved paper changes are common across all arms. Legacy files and raw attempts remain immutable; old validation reports do not establish success for the new profile.
+
+- Paper-first / B2/B3/B8: `simulation/phases/harvesting.py` chooses actual allocations for the public renderer only under the common override, retaining native requested-catch statistics and original disabled behavior. `check_data.py` verifies every report line against actual catch; `tests/test_recording.py` exercises oversubscription. Earlier amended smokes that still reported requested catches are preserved and superseded, with all spending retained.

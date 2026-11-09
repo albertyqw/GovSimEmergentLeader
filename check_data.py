@@ -85,6 +85,9 @@ def check_run(path, null_samples=1000):
             from simulation.paper_definitions import sustainability_threshold
             expected = sustainability_threshold(cycle["stock_before_harvest"], capacity, n, cycle["regen_factor"])
             require(abs(cycle["sustainability_threshold"] - expected) < 1e-9, "Paper sustainability threshold mismatch")
+            for catch in cycle["catches"]:
+                require(f"{catch['tag']} caught {catch['actual']} tons of fish" in cycle["report_text"],
+                        "Paper-aligned public report does not show actual allocated catch")
         if index == 0:
             require(cycle["regen_factor"] == 2.0, "First regeneration factor changed")
         else:

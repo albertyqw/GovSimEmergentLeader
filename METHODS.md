@@ -234,6 +234,7 @@ Set `env.paper_definitions: true`, `agent.paper_definitions: true`, and `agent.s
 - **Betweenness:** directed shortest paths with distance `1/w(u,v)` and fractional credit across all equal shortest paths, excluding source/target endpoints. Use the unnormalized sum in the paper's equation. Exact rational inverse distances preserve ties. Use these same definitions in random-target nulls.
 - **Memory recall:** request ten entries for conversation, private instruments, harvesting and home reflection. Preserve the existing expiry filtering, scoring, deduplication and return ordering; fewer than ten may be available after filtering/deduplication.
 - **Altruistic angles:** uniform on 57.15–90 degrees. Other category ranges remain as published; current values agents are prosocial. Study-only sampling uses independent keyed generators, never new global RNG calls. Do not introduce altruistic agents into the current design.
+- **Public report:** feed actual allocated catches, not requested catches, into the existing report renderer under the paper profile. Keep requested catches in native and standardized logs. This applies to every arm and preserves the existing report wording and current tags.
 - **Prompts:** replace code-only agenda-crafting honesty/deception instructions with paper-aligned instructions; honesty is common to all current arms, including baseline. Add SVO confidentiality only to agents receiving SVO text. Remove the extra fixed-doubling sentence from the general task. Align SVO category bounds, remove duplicated altruism text and restore its sentence separation; retain the focal agent's fisherman role. The honesty sentence is transcribed; deception and confidentiality instructions are semantic paraphrases, not claimed character-identical paper quotations. Define their exact study strings in `simulation/paper_definitions.py`. B5 texts remain unchanged.
 
 Where the paper does not specify an implementation detail, retain repository behavior: native integer stock regeneration, first-cycle factor 2.0, retrieval scores, insight-regex fallback, and end-of-cycle depletion checking. The paper's broad depletion wording does not determine sub-phase interrupt mechanics. Preserve these disclosed implementation choices rather than inventing new ones.
@@ -244,7 +245,7 @@ Each change sits behind its own config flag. With all B3 flags and the common B2
 
 | Flag | Change |
 |---|---|
-| `neutral_announcer` | Replace the No-Leader opener's speaker identity "Anonymous Leader" with framework identity "Announcer", and its message with `ANNOUNCER_TEMPLATE` (B5) filled with the unchanged output of `make_harvest_report` |
+| `neutral_announcer` | Replace the No-Leader opener's speaker identity "Anonymous Leader" with framework identity "Announcer", and its message with `ANNOUNCER_TEMPLATE` (B5) filled with the output of `make_harvest_report` (unchanged wording; B2 selects actual catches) |
 | `drop_mayor_line` | In `act_prompts.py`, omit the line beginning "The current policy following the mayor's agenda is" when the agenda is empty or None |
 | `drop_truthfulness_line` | Suppress the original code's agenda-crafting line. Under B2 paper alignment, retain the common paper-aligned honesty/deception instruction; it is not a leader cue |
 | `seeded_opener` | Replace the opener's `random.choice(target_personas)` with a choice from a dedicated generator (B6) |
@@ -497,6 +498,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 | Degree / betweenness | Incoming degree; directed inverse-distance fractional paths | Both endpoints; undirected selected unweighted paths | Use paper definitions for study measures and their nulls; preserve original analysis for labeled legacy checks |
 | Recall | Ten entries | Five in conversation | Request ten under B2; retain scoring/filtering/deduplication |
 | Altruistic angles | 57.15–90 | 57.15–75 | Use keyed study-only paper range; current prosocial design unchanged |
+| Public harvest report | Actual catches | Requested catches | Under B2, render actual allocations and retain both quantities in logs |
 | General/SVO text | Stochastic growth; privacy and consistent SVO text | Extra doubling claim, no privacy, duplicate SVO prose | Apply only the listed B2 paper-aligned prompt corrections |
 
 ## B15. Running under Codex

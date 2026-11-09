@@ -25,6 +25,23 @@ def read_jsonl(path):
 
 
 class RecordingTest(unittest.TestCase):
+    def test_oversubscribed_paper_report_uses_actual_allocations_and_keeps_requests(self):
+        with tempfile.TemporaryDirectory() as temp:
+            cfg = compose_study_config("baseline_N8", 0, cycles=1)
+            path = Path(temp) / "run"
+            recorder = RunRecorder(path, "baseline_N8", 0, cfg)
+            model = StubModel(catch=20)
+            wrapper = RecordingWrapper(model, recorder, render=False, wanbd_logger=StubLogger(),
+                                       temperature=0.0, top_p=1.0, seed=0, is_api=True)
+            with contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings(record=True):
+                asyncio.run(run(cfg.experiment, wrapper.wanbd_logger, wrapper, wrapper, str(path)))
+            cycle = read_jsonl(path / "cycles.jsonl.gz")[0]
+            self.assertEqual(sum(r["requested"] for r in cycle["catches"]), 160)
+            self.assertEqual(sum(r["actual"] for r in cycle["catches"]), 100)
+            for row in cycle["catches"]:
+                self.assertIn(f"{row['identity']} caught {row['actual']} tons of fish", cycle["report_text"])
+            self.assertTrue(check_run(path, null_samples=1)["valid"])
+
     def test_stakes_nominations_resolve_tags_bare_case_and_partial_names(self):
         for style in ("tagged", "bare", "lowercase", "partial"):
             with self.subTest(style=style), tempfile.TemporaryDirectory() as temp:

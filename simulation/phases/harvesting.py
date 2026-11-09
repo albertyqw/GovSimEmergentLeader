@@ -144,6 +144,13 @@ class HarvestingPhase(Phase):
     print(f"ROUND {ctx.round_num} ROUND STATS: {ctx.round_stats}")
 
     # ── Generate harvest report and broadcast public memories ──────
+    if getattr(ctx.cfg.env, "paper_definitions", False):
+      report_stats = {
+          persona.identity.name: ctx.env.internal_global_state["last_collected_resource"][agent_id]
+          for agent_id, persona in ctx.personas.items()
+      }
+    else:
+      report_stats = ctx.round_harvest_stats[ctx.round_num]
     if ctx.leader_candidates:
       assert ctx.winner is not None
       harvest_report = await leaders_lib.amake_leader_report(
@@ -155,7 +162,7 @@ class HarvestingPhase(Phase):
           agenda=ctx.agenda,
           curr_round=ctx.round_num,
           winner_id=ctx.agent_name_to_id[ctx.winner],
-          round_harvest_stats=ctx.round_harvest_stats[ctx.round_num],
+          round_harvest_stats=report_stats,
           regen_factor=ctx.env.internal_global_state["regen_factor"],
           debug=ctx.debug,
       )
@@ -171,7 +178,7 @@ class HarvestingPhase(Phase):
     else:
       print("NO LEADER CANDIDATES - MAKING FACTUAL REPORT ...")
       harvest_report = leaders_lib.make_harvest_report(
-          ctx.personas, ctx.round_harvest_stats[ctx.round_num]
+          ctx.personas, report_stats
       )
     ctx.harvest_report = harvest_report
 

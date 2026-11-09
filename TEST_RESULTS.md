@@ -1,6 +1,6 @@
 # Current paper-first validation
 
-- 39 tests passed with all six conditions running six native stub cycles.
+- 40 tests passed with all six conditions running six native stub cycles.
 - Six additional CLI workers wrote full standardized/native logs and passed check_data.py under the amended profile (10 null replicates for this tool check). All private answers parsed, harvest/nominee failures were zero, and costs were zero because the transport was stubbed.
 - Dedicated tests cover fractional/full-capacity threshold boundaries at N8/N16/N32, keyed altruistic range through 90, preserved disabled sampling, incoming degree, inverse-distance path selection and fractional credit for exact tied paths.
 - Current private-call isolation checks retain byte-identical memory with instruments disabled/enabled. All study payloads use 16000 generation/find and 1000 fresh importance caps; requested recall is ten and recorded independently of returned count.
@@ -34,3 +34,5 @@ The final SDK checks also cover unknown partial-response cost: halt and retain t
 ## Paid smoke status
 
 Four conditions validated: replica, baseline, values and stakes. N=32 hit the unchanged 8000-token generation limit twice; the shared guard halted it and the concurrent N=16 smoke. All attempts and costs are preserved. See SMOKE_REPORT.md. Full pilot preparation is pending user review; no full Flash run has started.
+
+Public-report oversubscription is also tested: 160 tons requested against a 100-ton lake, 100 allocated, each public line matching actual allocation while requested catches remain logged. Paid paper-profile attempts preceding this completeness correction are superseded and retained.

@@ -97,3 +97,5 @@ Detailed paper links, code evidence, implications and limits are recorded in SET
 ## Superseding paper-first decision
 
 The user approved paper definitions for threshold, degree, betweenness, ten-entry recall and altruistic bounds, plus paper-aligned honesty/privacy and removal of the extra doubling sentence. Study flags now override those specific original discrepancies. This supersedes earlier preservation decisions for those items only. Original paths and constants remain when flags are off; original social.py and retrieve.py are untouched. Unspecified implementation choices (integer regeneration, depletion transition timing and malformed insight regex) remain as disclosed. See METHODS B2 for exact amended scope and SETUP_AUDIT for verification.
+
+The paper-first hierarchy also supersedes the prior requested-catch reporting choice: common paper-profile reports use actual allocations. Original renderer wording and disabled behavior remain; native requested data and all historical reports are retained.
