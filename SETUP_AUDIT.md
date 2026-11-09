@@ -110,3 +110,50 @@ Subsequent user answers resolved the analysis definitions; current acceptance ev
 - The user approved tie-aware adoption, deferring paid judge work until after the experiment, and explicit undefined eigenvector status. AgentElect contains no coordination random-allocation null implementation. The user specified a nomination-chain airtime null and conditional random-target influence null; both are implemented with recorded separate RNG keys.
 
 - The final pre-smoke suite passes 33 tests. Fixed-state request comparison matches the original replica byte for byte; all six condition diffs are stored in tests/golden. Manifest and seven-table Parquet conversion work on stored stub data. See TEST_RESULTS.md and FIDELITY.md for reproducible evidence.
+
+
+## Paper cross-check — 8 November 2026
+
+Compared the main experimental specification, mathematical definitions, Tables 8–9 and Appendices B, C and E with pinned commit `8cf0aba9efe0b4592f395d9a66e6cfff3cec9a26`. Code line numbers below are working-tree navigation references; the relevant original functions were checked against `git show 8cf0aba:PATH`. The current paper is [arXiv v2, revised 20 April 2026](https://arxiv.org/abs/2604.11721v2); earlier token verification used v1. The relevant token statement and benchmark rows also occur in v2. This is a source audit, not evidence that the pinned commit generated the published results. That commit predates the paper; the exact experiment revision and serving settings remain unverified.
+
+### Newly confirmed differences with practical consequences
+
+| Item | Paper specification | Pinned implementation / current study consequence |
+|---|---|---|
+| Sustainability threshold | `max((S*rho - M)/(N*rho), 0)` — [Definition 3.2](https://arxiv.org/html/2604.11721v2#S3.SS3) | `simulation/environment/concurrent_env.py:228-238` computes `int(max((rho-1)*S/(N*rho),0))`. It preserves current stock, rather than necessarily refilling to capacity. At S=50, M=100, rho=2, N=8, these are 0 versus 3; at full stock, 6.25 versus 6 because of truncation. Current over-usage uses the native threshold. Changing the analysis definition needs review; original environment behavior is preserved. |
+| Degree | Weighted incoming links — [§4.5.2](https://arxiv.org/html/2604.11721v2#S4.SS5.SSS2) | `simulation/analysis/social.py:528-550` adds each edge to both endpoints. `study_analysis.py:graph_measures` currently retains that endpoint convention even on the approved directed graph. Direction alone did not align this measure with the paper. |
+| Betweenness | Fractional inverse-weight shortest paths — [§4.5.2](https://arxiv.org/html/2604.11721v2#S4.SS5.SSS2) | `social.py:553-575` calls unweighted `all_pairs_shortest_path`, choosing one path per pair. Passing the inverse-weight dictionary does not make that function use its weights. The study currently preserves that path-count convention, with direction added. This is a separate choice from graph direction and requires review. |
+| Memory recall | Ten entries — [Appendix E.2.1, PDF p.24](https://arxiv.org/pdf/2604.11721v2#page=24) | Pinned `converse.py` requests five; harvesting and home reflection request ten. Deduplication can reduce returned counts further. `retrieve.py` ignores focal-point contents and scores earlier sorted entries more highly for recency. Current private instruments intentionally follow the five-entry utterance context. |
+| Altruistic sampling | 57.15–90 degrees — [§3.1.1](https://arxiv.org/html/2604.11721v2#S3.SS1.SSS1) | `leaders.py:109-110` samples 57.15–75.0. This has no direct effect on the current prosocial-only values arm: its 22.45–57.15 range matches. Do not alter unrelated original leader sampling. |
+| General task text | Stochastic growth — [Appendix E.2, PDF p.24](https://arxiv.org/pdf/2604.11721v2#page=24) | Pinned v3 text additionally says fish double once, before describing the uniform factor. The original contradiction is retained at N=8 and in scaled arms. This is already recorded in QUIRKS.md and is now verified against the appendix. |
+| Depletion timing | Depletion at any point — [§3.2](https://arxiv.org/html/2604.11721v2#S3.SS2) | `concurrent_env.py:469-480` checks post-harvest stock only after discussion/reflection, before regeneration. A depleted lake therefore still generates that cycle's discussion and reflection. Treat this as a wording/implementation mismatch; it does not establish how unpublished experiment revisions behaved. |
+
+Actual pinned metric functions were exercised without editing them or starting a model. For Julia→Kate weight 2 and Kate→Luke weight 1, pinned degree is Julia=2, Kate=3, Luke=1; incoming-only degree would be 0,2,1. On a triangle with inverse distances 0.1, 0.1 and 1, the pinned unweighted routine assigns no intermediary credit, while directed inverse-weight fractional betweenness assigns Kate one. These demonstrate that the differences can change leadership rankings.
+
+### Previously known differences rechecked against the paper
+
+| Item | Paper specification | Existing source finding / disposition |
+|---|---|---|
+| Output cap | At least 16K — [§4.1](https://arxiv.org/html/2604.11721v2#S4.SS1) | Original generation/find defaults are 8000 and fresh importance selections use 1000. The user now approved 16000 for study generation/find and private calls, consistently across conditions, retaining 1000 ratings. Both METHODS.md copies are amended. Runtime implementation and renewed smoke validation remain pending. |
+| Truthfulness | General honesty/deception instructions — [Appendix E.1, PDF pp.23–24](https://arxiv.org/pdf/2604.11721v2#page=23) | Source uses agenda-crafting instructions instead; voters are hard-coded honest. Preserve replica source prompts and the approved removals elsewhere. |
+| SVO privacy | Angle stays private — [Appendix B, PDF pp.20–21](https://arxiv.org/pdf/2604.11721v2#page=20) | No secrecy instruction exists in `SVO_LEADER_TASK`. The duplicated altruism sentence and missing space also remain. The values arm keeps the approved source-derived text with only the fisherman opening replacement. |
+| Network direction | Directed edges — [Appendix C](https://arxiv.org/html/2604.11721v2#A3) | Original betweenness/eigenvector functions construct undirected graphs. Directed study graphs were previously approved; original analysis code remains unchanged. The paper's importance equation does not settle every adjacency-weight implementation choice. |
+| Regeneration | Multiplicative capped stock — [§3.2](https://arxiv.org/html/2604.11721v2#S3.SS2) | Original stock is integer-truncated and cycle 1 fixes rho=2; later factors are unseeded uniform draws. Both code behaviors remain, as previously approved. |
+| Public report | True harvest statistics — [§3.2](https://arxiv.org/html/2604.11721v2#S3.SS2) | Native report labels requested amounts as catches. Oversubscribed allocations can differ. Preserve the public report as approved; standardized logs record both values. |
+
+### Replication ambiguities and additional source quirks
+
+These are not all established paper contradictions; the publication does not specify enough to settle them.
+
+- `social.py:180-181` labels any six recorded harvest cycles as survival, including a possible sixth-cycle collapse. The study uses explicit collapse flags. Both results should be disclosed when reconstructing A11 comparisons.
+- `social.py:187-199,660-688` reconstructs welfare and inequality from requested-catch records, capping aggregate welfare by reconstructed stock. Our study uses actual allocations, including for household equality. The reconstruction can matter especially for inequality under oversubscription.
+- `social.py:280-297` computes its reported standard-error helper as `sqrt(sum((x-mean)^2))/(n-1)`, rather than the usual sample standard deviation divided by `sqrt(n)`. The paper does not establish that this helper produced every published uncertainty. Keep publication error bars as reported; calculate this study's prespecified SE separately and label any legacy reproduction.
+- The original insight/evidence regex fails and can store empty insights. Other conversation reflection calls still execute. Appendix memory examples cannot prove which code revision produced them. The user already chose to preserve this quirk.
+- Original name matching/interaction parsing and graph aggregation include implementation conventions beyond the mathematical definitions. Our per-cycle graphs, silent-agent coverage, tenure handling and null comparisons are deliberate study choices, not direct replications of the original pooled leader analysis.
+- The paper does not establish the exact integer behind 16K, a provider pin, a Gemini reasoning budget, or whether output caps differed for internal importance calls. Do not describe our 16000/1000 choice as exact recovery of all published request parameters.
+
+### Confirmed agreements and deliberate study differences
+
+The paper's Tables 8 and 9 match every value already copied into METHODS A11. Six cycles, eight agents, a 50-response discussion limit and temperature zero also agree. Our five seeds, one primary model, neutral baseline, private instruments, stakes succession, N16/N32 lake scaling and per-cycle leadership tests are intentional design changes, already documented in the methods. They should not be presented as accidental paper/code discrepancies.
+
+Only the token-cap amendment was made to the binding methods in this review. No simulation, retrieval, reflection, threshold or centrality code was changed. Paid runs remain halted; the current runtime still uses the old caps until the approved override is implemented and validated. Review of threshold/centrality conventions is warranted before freezing primary outcomes.

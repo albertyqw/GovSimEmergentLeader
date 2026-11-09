@@ -81,3 +81,15 @@ These observations do not authorize changes to original simulation behavior.
 - Location: `simulation/persona/memory/associative_memory.py:274-279,322-330`.
 - The original writer indents each description line; the reader omits empty lines after removing that indentation. In-memory node descriptions can therefore differ from the actual retrieved text even though they refer to the same node.
 - Preserve the original writer, reader and retrieved text. The logging observer uses that exact normalization only to recover node IDs, matching active entries and stable duplicate order. Initial replica smoke attempt exposed an observer mismatch and failed validation; its raw data is preserved and the attempt is rerun after the logging-only repair.
+
+## Paper cross-check additions (original behavior preserved)
+
+- `concurrent_env.py:228-238`: native sustainability threshold is `int(max((rho-1)*S/(N*rho),0))`, differing from the publication's full-capacity target formula. No environment or over-usage code changed in this audit.
+- `converse.py` pinned-source retrieval requests five entries; harvesting and home reflection request ten. Original retrieval also ignores focal-point contents. Keep these behaviors.
+- `leaders.py:109-110`: altruistic angles stop at 75.0, rather than the paper's 90.0; the current prosocial range is unaffected.
+- `social.py:528-575`: degree counts both edge endpoints, and betweenness counts intermediaries on selected unweighted paths even when passed inverse edge weights. These differ from the paper's incoming-degree and inverse-distance fractional definitions, beyond the previously recorded direction mismatch.
+- `social.py:280-297`: legacy standard-error helper is `sqrt(sum((x-mean)^2))/(n-1)`. Do not silently repair original analysis code or assume this establishes the provenance of publication error bars.
+- `concurrent_env.py:469-480`: depletion is checked after discussion/reflection, before regeneration, not immediately on harvest.
+- The new user-approved methods amendment supersedes the earlier decision to keep 8000 generation tokens for study runs. Original 8000/1000 defaults are still preserved in source; implementation of a study-only 16000/1000 override is pending. Earlier approvals to preserve the reflection regex and other quirks remain in force.
+
+Detailed paper links, code evidence, implications and limits are recorded in SETUP_AUDIT.md under "Paper cross-check".
