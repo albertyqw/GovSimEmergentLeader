@@ -6,9 +6,9 @@
 - Branch: `emergent-leadership`, based on `8cf0aba9efe0b4592f395d9a66e6cfff3cec9a26`.
 - Initial commit `567703b` adds only unchanged `METHODS.md` and `AGENTS.md`; ancestry and byte comparisons passed, and the branch was pushed.
 - `.env` is already ignored by the original `.gitignore`; no edit is needed.
-- Current session: macOS arm64, Python 3.10.11. The intended remote execution machine/path is not yet specified.
+- Execution host: the user selected this Mac, with working directory `/Users/yongqi/Documents/emergent_leaders/GovSimEmergentLeader`. The initial shell uses Python 3.10.11; the isolated `.venv` uses the available Python 3.11.16 interpreter.
 - `OPENROUTER_API_KEY` is absent from this session's environment. No authenticated key/balance request or paid model call has been made.
-- No simulation dependencies have been installed. The repository offers Conda and cluster/venv setup paths with differing pins and several unpinned packages. Select the intended execution environment before installation; preserve declared versions and stop on failure under B10.
+- The user selected default Mac requirements plus Pathfinder's declared dependencies, retaining all default pins and the repository's PyTorch 2.2.0 / torchvision 0.17.0 / torchaudio 2.2.0 pins. Installation is being performed in `.venv`; dependency declaration files remain unchanged. Runtime compatibility is not yet verified.
 
 ## Public OpenRouter catalog check
 
@@ -64,11 +64,16 @@ Static validation derives signatures and caller arguments from the original and 
 
 This verifies argument compatibility, not a complete runtime or stub run. Full runtime validation remains pending the environment setup and B9 stub harness.
 
-## Decisions required before affected implementation
+## Clarifications after the audit
 
-- Treat the no-leader `No specific guidance.` sentinel as absent for B3's mayor-line omission, or define another approved behavior.
-- Define how private measurement prompts include the report when the shared original utterance prefix does not contain it.
-- Choose directed study centrality calculations versus the original undirected analysis behavior.
-- Specify the remote execution host/path before dependency installation and paid smoke tests. The earlier reply "Sure" did not identify either.
+- The user approved removing the mayor cue. Treat the no-leader sentinel as absent only behind the new `agent.act.drop_mayor_line` flag. Prompt-prefix checks against pinned source pass with the flag missing or off; enabling it removes only the specified line for None, empty, or sentinel agendas and retains genuine agendas.
+- Retain the original public fishing report in the framework announcement. Repeat the same public report in private measurement context so elicitation has the required information before discussion; preserve the original shared prompt prefix.
+- The user approved directed study influence graphs; original analysis code stays untouched.
+- The user selected this Mac for experiment execution and default Mac dependency pins. User launch of full Flash runs and every STOP gate still apply.
+
+## Initial implementation checks
+
+- B5 constants were copied from `METHODS.md`, which remains byte-identical to the supplied file.
+- `python3.11 -m unittest discover -s tests -v`: 4 initial tests passed (exact texts and three mayor-prompt fidelity cases). These are focused checks, not the full B9 stub suite or API payload verification.
 
 Other planning questions about silent-agent eligibility, attempt directories, spending scope and analysis definitions remain open and must be resolved before the corresponding implementation.

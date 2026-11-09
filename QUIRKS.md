@@ -23,13 +23,13 @@ These observations do not authorize changes to original simulation behavior.
 
 - Locations: `simulation/persona/persona.py:43`; `simulation/phases/base.py:45,77`; `simulation/persona/cognition/act_prompts.py:51-54` (pinned-source references).
 - The no-leader path uses `DEFAULT_AGENDA = "No specific guidance."`, not an empty string or None. Omitting the mayor line only for empty/None agendas, as B3 specifies, would leave the mayor cue in the baseline.
-- Status: awaiting clarification before implementing `drop_mayor_line`.
+- Resolution: the user approved "no mayor" for baseline conditions. The guarded omission treats the original no-guidance sentinel as absent, as well as an empty string or None. Flag-off prompts retain the original line.
 
 ## B4.4: The harvest report is inside the conversation section
 
 - Locations: `simulation/environment/concurrent_env.py:165-174`; `simulation/persona/cognition/converse.py:75-89`; `simulation/persona/cognition/converse_prompts.py:49-64` (pinned-source references).
 - Restaurant `current_context` is empty. The report enters utterance prompts as the framework's first conversation message, after "Conversation so far". Cutting the prompt before that section loses the report, contrary to B4.4's assumption that it is already in current context.
-- Status: awaiting clarification about including the report in private measurement prompts and the corresponding prefix-fidelity test.
+- Interpretation following the user's request to retain AgentElect's public report: keep the framework's public report unchanged (apart from B3's specified neutral announcement) and include that same public information in private elicitation context. The original shared prefix remains unchanged; the added report context must be explicitly allowlisted in its fidelity test. This repeats public information and does not create a private report or add it to memory.
 
 ## B3 / B8: The original report labels requested catches as actual catches
 
@@ -41,4 +41,4 @@ These observations do not authorize changes to original simulation behavior.
 
 - Locations: `simulation/analysis/social.py:569,593-594` (pinned-source references).
 - The original code uses `nx.from_dict_of_dicts(...)` without a directed graph constructor for betweenness and eigenvector centrality. Degree counts both endpoints; eigenvector centrality does not request weighted edges. A10 describes a directed graph while also referring to this code.
-- Status: interpretation required before implementing the A10 metric calculations. Original analysis code remains unchanged.
+- Resolution: the user approved directed graphs for the study's A10 metric calculations. Original analysis code remains unchanged.

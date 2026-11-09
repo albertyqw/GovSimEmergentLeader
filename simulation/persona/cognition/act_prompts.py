@@ -43,10 +43,14 @@ def prompt_action_choose_amount_of_fish_to_catch(
         current_location, current_time,
     )
     lm += f"Current context: {context}\n"
-    lm += (
-        "\nThe current policy following the mayor's agenda is"
-        f" the following: {leader_agenda}\n"
-    )
+    if not (
+        getattr(agent.cfg.act, "drop_mayor_line", False)
+        and leader_agenda in (None, "", persona_lib.DEFAULT_AGENDA)
+    ):
+      lm += (
+          "\nThe current policy following the mayor's agenda is"
+          f" the following: {leader_agenda}\n"
+      )
     lm += (
         f"{cognition_utils.memory_prompt(agent.identity, memories)}\n"
     )
