@@ -14,6 +14,8 @@ Baseline: `8cf0aba9efe0b4592f395d9a66e6cfff3cec9a26`.
 | `tests/test_intervention_texts.py` (new file) | B9 | Compare all seven B5 constants character for character with their fenced specification texts. |
 | `simulation/persona/cognition/act_prompts.py`: guard the original mayor line | B3, user clarification | Omit the line when `agent.act.drop_mayor_line` is enabled and the agenda is None, empty, or the original no-guidance sentinel; preserve it with the flag off. |
 | `tests/test_mayor_prompt.py` (new file) | B9 | Execute the actual harvest user-prompt block and compare it against pinned source with absent/disabled/enabled flags and absent/real agendas, without model calls. |
+| `simulation/intervention_randomness.py` (new file) | B6, approved N-specific opener interpretation | Define the ordered name pool and dedicated keyed draws, independent of the original random generators. Helpers are not yet connected to the runner. |
+| `tests/test_intervention_randomness.py` (new file) | B9 | Verify ordered names, horizon spread/ranges, repeatability, draw isolation and full-pool openers at larger N. |
 
 ## Approved interpretations awaiting implementation
 
