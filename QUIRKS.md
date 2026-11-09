@@ -107,3 +107,7 @@ The paper-first hierarchy also supersedes the prior requested-catch reporting ch
 - Harvest number parsing falls back to zero if its search fails (`act_prompts.py:76-93`; wrapper `find` exception handler). Local fake-SDK cases confirmed these branches without model calls. This is observed original behavior, not an authorized change to the study's current halt policy.
 
 The user has now authorized retaining that original fixed-cap parser behavior for the study, with explicit truncation and fallback logging. This supersedes the earlier added stop-on-length safeguard; original parser code remains unchanged.
+
+## User-approved neutral amendment supersedes selected quirks
+
+The first Flash pilot confirmed missing first-harvest group size and invalid `Anonymous Leader`/open-ended nominations. The user authorized an explicit count, no scripted leadership cues in any arm, and uniform random invalid-nomination fallback. These are new study departures from the paper/repository, guarded by `agent.neutral_study`. Original parsers and disabled branches remain; other reflection/default quirks are unchanged. The old first-option/Julia fallback still documents historical data but does not govern new neutral runs.

@@ -483,7 +483,7 @@ def get_leader_persona_prompts(
     from simulation.paper_definitions import HONESTY_PROMPT, DECEPTION_PROMPT
     disinfo_prompt = DECEPTION_PROMPT if getattr(persona, "paper_disinformation", persona.disinfo) else HONESTY_PROMPT
   leader_prompt = ""
-  if persona.current_leader:
+  if persona.current_leader and not getattr(persona.cfg, "neutral_study", False):
     leader_name = persona.current_leader.identity.name
     if leader_name == persona.identity.name:
       leader_prompt = "You are the current leader.\n"

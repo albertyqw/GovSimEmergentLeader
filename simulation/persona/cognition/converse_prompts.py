@@ -63,19 +63,27 @@ def prompt_converse_utterance_in_group(
         current_conversation,
     )
     lm += f"{conv_str}\n\n"
-    lm += (
-        "Task: What would you say next in the group"
-        " chat? Ensure the conversation flows"
-        " naturally and avoids repetition. Try to"
-        " highlight qualities that are important to"
-        " the group, and reference any speakers that"
-        " you believe provided sound plans that could"
-        " be useful to the group. Also ensure that"
-        " you consider the survival of the community"
-        " by Determine if your response concludes the"
-        " conversation. If not, identify the next"
-        " speaker.\n\n"
-    )
+    if getattr(init_persona.cfg, "neutral_study", False):
+      lm += (
+          "Task: What would you say next in the group chat? Ensure the conversation "
+          "flows naturally and avoids repetition. Consider the sustainability of the lake "
+          "and the community's income. Determine if your response concludes the "
+          "conversation. If not, identify the next speaker.\n\n"
+      )
+    else:
+      lm += (
+          "Task: What would you say next in the group"
+          " chat? Ensure the conversation flows"
+          " naturally and avoids repetition. Try to"
+          " highlight qualities that are important to"
+          " the group, and reference any speakers that"
+          " you believe provided sound plans that could"
+          " be useful to the group. Also ensure that"
+          " you consider the survival of the community"
+          " by Determine if your response concludes the"
+          " conversation. If not, identify the next"
+          " speaker.\n\n"
+      )
     response = "Response: "
     answer_stop = "Conversation conclusion by me: "
     next_speaker = "Next speaker: "
@@ -119,6 +127,7 @@ def prompt_converse_utterance_in_group(
         lm["utterance_ended"].lower() == "yes"
     )
 
+    init_persona.nomination_fallback = None
     if utterance_ended:
       next_speaker = None
       init_persona.last_nominee_raw = None
@@ -128,6 +137,17 @@ def prompt_converse_utterance_in_group(
       options = [
           cognition_utils.render_name(t.identity) for t in target_personas
       ]
+      fallback = options[0]
+      if getattr(init_persona.cfg, "neutral_study", False):
+        from simulation.intervention_randomness import nomination_fallback
+        key = init_persona.nomination_fallback_key
+        fallback = nomination_fallback(key, options)
+        init_persona.nomination_fallback = {"key": key, "options": options, "candidate": fallback, "applied": False}
+        recorder = getattr(model, "recorder", None)
+        if recorder is not None:
+          record = recorder.buffers.get(getattr(recorder.local, "current", None))
+          if record is not None:
+            record["nomination_fallback"] = init_persona.nomination_fallback
       if getattr(init_persona.identity, "stakes_months_remaining", None) is not None:
         from simulation.measurement_prompts import resolve_name
         raw_nominee = lm.text_to_consume.strip()
@@ -142,19 +162,26 @@ def prompt_converse_utterance_in_group(
         bare_options = [t.identity.name for t in target_personas]
         resolved = resolve_name(raw_nominee, bare_options)
         failed = resolved not in bare_options
-        next_speaker = bare_options[0] if failed else resolved
+        next_speaker = bare_options[options.index(fallback)] if failed else resolved
         lm = lm.set("next_speaker", next_speaker)
         recorder = getattr(model, "recorder", None)
         if recorder is not None:
           recorder.parse_result("next_speaker", next_speaker,
                                 error="Unresolved nomination" if failed else None)
+          if failed and getattr(init_persona.cfg, "neutral_study", False):
+            init_persona.nomination_fallback["applied"] = True
+            record = recorder.buffers.get(getattr(recorder.local, "current", None))
+            if record is not None:
+              record["parsed_output"]["next_speaker"] = next_speaker
+              record["parse_operations"][-1].update(fallback_applied=True, fallback_value=next_speaker)
+
         init_persona.last_nominee_raw = raw_nominee
       else:
         lm = model.select(
             lm,
             name="next_speaker",
             options=options,
-            default_value=options[0],
+            default_value=fallback,
             chain=chain,
         )
         assert lm["next_speaker"] in options

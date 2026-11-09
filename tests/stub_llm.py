@@ -37,6 +37,8 @@ class StubModel(ModelAPI):
                     next_name = next_name.lower()
                 elif self.nomination_style == "partial":
                     next_name = next_name[:3]
+            if self.nomination_style == "invalid":
+                next_name = "Anonymous Leader"
             transcript = prompt.rsplit("\nConversation so far:\n", 1)[1].split("\n\nTask:", 1)[0]
             previous_turns = len(re.findall(r"^-(?:" + "|".join(bare_names) + r")(?: \[.*?\])?:", transcript, re.M))
             ending = "yes" if previous_turns + 1 >= self.turns else "no"

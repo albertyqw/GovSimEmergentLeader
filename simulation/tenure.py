@@ -58,6 +58,9 @@ class TenureState:
                     experiment_storage=ctx.experiment_storage,
                 )
                 persona.init_persona(agent_id, identity, social_graph=None)
+                if getattr(ctx.cfg.agent, "neutral_study", False):
+                    identity.neutral_study = True
+                    identity.participant_count = ctx.cfg.env.num_agents
                 if getattr(ctx.cfg.agent, "paper_definitions", False):
                     identity.paper_definitions = True
                     persona.paper_disinformation = bool(ctx.cfg.env.disinformation)

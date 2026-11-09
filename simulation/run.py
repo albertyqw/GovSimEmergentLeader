@@ -222,6 +222,9 @@ async def run(
     )
     if hasattr(cfg.agent, "lake_scale"):
       identities[persona].lake_scale = cfg.agent.lake_scale
+    if getattr(cfg.agent, "neutral_study", False):
+      identities[persona].neutral_study = True
+      identities[persona].participant_count = cfg.env.num_agents
     if getattr(cfg.agent, "paper_definitions", False):
       identities[persona].paper_definitions = True
   for persona in personas:

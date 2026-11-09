@@ -150,6 +150,8 @@ Each primary endpoint is reported on all cycles and excluding cycles in which th
 
 ## A11. Comparability with AgentElect
 
+**Post-pilot amendment:** all study arms now state the participant count, remove scripted leadership cues, and use keyed uniform invalid-nomination fallback. The former replica is a modified reference condition; comparisons with the original paper are descriptive and do not establish exact prompt replication. The initial pilot is preserved but superseded.
+
 The replica runs first. Its five runs are compared with AgentElect's published Gemini 2.5 Flash, 8-agent No-Leader results (Tables 8 and 9). Because the truthfulness flag never reaches voters, those two rows are effectively two replicates of one condition and together bound expected variation:
 
 | Metric | Table 8 | Table 9 |
@@ -240,9 +242,18 @@ Set `env.paper_definitions: true`, `agent.paper_definitions: true`, and `agent.s
 
 Where the paper does not specify an implementation detail, retain repository behavior: native integer stock regeneration, first-cycle factor 2.0, retrieval scores, insight-regex fallback, and end-of-cycle depletion checking. The paper's broad depletion wording does not determine sub-phase interrupt mechanics. Preserve these disclosed implementation choices rather than inventing new ones.
 
+### User-approved neutral study amendment after the first pilot
+
+Enable `agent.neutral_study: true` in every study condition, including replica. This explicitly supersedes retained leadership cues and the fixed first-name nomination fallback. The old pilot and all older attempts remain immutable and superseded. The replica is now a modified reference condition, not an exact prompt replication.
+
+- Append `PARTICIPANT_COUNT_TEMPLATE` (B5), filled with the actual number of present fishermen including the agent, to the general task prompt. Set it from the environment configuration and propagate it to stakes successors. Current counts are 8, 16 and 32.
+- All conditions use the neutral Announcer/report template and omit the mayor-policy line and current-leader role assignments. The discussion task must not ask agents to highlight speakers' qualities or endorse their plans. Keep the neutral private influence question, focal prosocial values/plan, honesty, and sustainability instructions. Never rewrite agent-generated utterances or memories, even if agents themselves mention leadership.
+- Invalid nominations select uniformly from the same present-agent options the original code offered, including the current speaker. Use an independent keyed generator (B6); preserve the original parser and valid-name handling. Log the draw/key/options and distinguish an applied fallback from a valid nomination. Stakes uses the same fallback after tag-aware name resolution. No extra model call or retry is added.
+- Keep the original behavior when this flag is disabled. Re-run all six one-cycle smokes and a user-started replacement pilot before proceeding. Preserve `final-runs` for the old pilot; freeze the replacement source under `final-runs-v2`. All full replica seeds must use the replacement commit.
+
 ## B3. Baseline changes
 
-Each change sits behind its own config flag. With all B3 flags and the common B2 overrides off, the branch must behave exactly as the original commit. Study replica runs keep B3 off but enable the disclosed common B2 overrides.
+Each change sits behind its own config flag. With all B3 flags and the common B2 overrides off, the branch must behave exactly as the original commit. Study replica runs keep B3 off but enable the disclosed common B2 overrides, including the neutral study amendment that takes precedence over leadership cues.
 
 | Flag | Change |
 |---|---|
@@ -300,6 +311,11 @@ Put each of these in `simulation/interventions.py`, copied character for charact
 ```
 Here is the monthly fishing report:
 {report}
+```
+
+**PARTICIPANT_COUNT_TEMPLATE:**
+```
+There are {n} fishermen fishing in this lake, including you.
 ```
 
 **VALUES_AGENDA:**
@@ -371,6 +387,7 @@ Never call the global `random` or `np.random` in new code. Every new draw uses `
 | Draw | Key |
 |---|---|
 | Opener, cycle c | `f"opener|{seed}|{c}"` |
+| Invalid nominee, cycle c, zero-based agent turn t | `f"nominee_fallback|{seed}|{c}|{t}"`; uniform choice from the offered present identities, including self |
 | Values SVO angle | `f"svo|{seed}"`, `uniform(22.45, 57.15)` |
 | Other paper-aligned SVO categories, if used | `f"paper_svo|{seed}|{slot}|{category}"`; paper ranges in B2. This does not add leaders or altruistic agents to study conditions |
 | Stakes initial schedule (x and the shuffle) | `f"stakes|{seed}"` |
@@ -432,7 +449,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 **Information isolation** (scan every logged prompt from stub runs)
 - Values text and SVO text appear only in the focal agent's prompts.
 - Game length never appears: no "6 cycles", "six months", or final-month references.
-- The mayor line appears only in the replica. Old agenda-crafting truthfulness text is absent from all paper-aligned runs; the new honesty instruction is common to strategic prompts in every arm. SVO confidentiality appears only with the focal agent's SVO text.
+- No study prompt assigns a leader/mayor role under the neutral amendment, including replica. Old agenda-crafting truthfulness text is absent from all paper-aligned runs; the new honesty instruction is common to strategic prompts in every arm. SVO confidentiality appears only with the focal agent's SVO text.
 - No condition registers a leader candidate or runs a policy or election phase.
 - Stakes: every system-generated name (report lines, speaker labels, participant and nominee lists, "You are NAME") carries its current tag, and free text is never rewritten; no tag shows anything but months remaining; the instruction is in every agent's system prompt, successors included; successors start with empty memory; leavers are never called again.
 - Elicitation and perceived-leadership calls leave memory identical to runs without them.
@@ -449,12 +466,12 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 2. Add, don't edit: implement each change as a guarded branch, leaving the original code path to run verbatim when its flag is off.
 3. Never run formatters, linters, or auto-fixers on existing files.
 4. Don't fix original bugs or quirks unless this document names them. Record each in `QUIRKS.md` with file and line.
-5. Leave untouched: original memory scoring and storage, reflection and summary task prompts apart from B2's common general-system text, parsing regexes, agreed-limit extraction, sampling parameters other than the explicit B2 token-cap and altruistic-range overrides, the model wrapper's retry behavior, and phase order. Apply the common cap through a study-only override; preserve the original wrapper defaults and the original path when that override is disabled.
+5. Leave untouched: original memory scoring and storage, reflection and summary task prompts apart from B2's common general-system text, parsing regexes apart from the explicit B2 invalid-nomination fallback override, agreed-limit extraction, sampling parameters other than the explicit B2 token-cap and altruistic-range overrides, the model wrapper's retry behavior, and phase order. Apply the common cap through a study-only override; preserve the original wrapper defaults and the original path when that override is disabled.
 6. Logging only observes requests and responses: no added messages, changed parameters, or reordering.
 7. One commit per item in this document, with the section number in the message.
 8. `CHANGES.md` maps every hunk of `git diff 8cf0aba` to a section of this document. Revert any hunk that maps to none.
 9. `FIDELITY.md` shows, for each intervention, its text here, its code location, and a rendered prompt excerpt from a stub run.
-10. Tag the commit used for the replica pilot `final-runs`. Every run records its commit hash. If a fix is needed after launch, STOP, report, and rerun every affected run on the new commit. Never mix commits within a condition.
+10. Tag the commit used for the initial replica pilot `final-runs`; retain that tag and use `final-runs-v2` for the user-approved neutral-study replacement pilot. Every run records its commit hash. If a fix is needed after launch, STOP, report, and rerun every affected run on the new commit. Never mix commits within a condition.
 
 ## B11. Workflow and gates
 

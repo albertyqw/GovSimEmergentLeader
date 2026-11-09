@@ -1,3 +1,7 @@
+# Current source amendment
+
+All study conditions now require `agent.neutral_study: true`: explicit participant counts, neutral scripted prompts, and keyed uniform invalid-nomination fallback. The initial full pilot is superseded and preserved under `final-runs`. Repeat all six smokes before the user starts a replacement pilot. Freeze the replacement source as `final-runs-v2`, retaining the original tag. The same pilot command will allocate a fresh attempt because the resolved config differs. No full pilot is launched by Codex. Historical procedures below otherwise apply.
+
 # Running the study on this Mac
 
 Repository: `/Users/yongqi/Documents/emergent_leaders/GovSimEmergentLeader`.

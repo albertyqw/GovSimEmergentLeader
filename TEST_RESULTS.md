@@ -1,3 +1,7 @@
+# Neutral amendment verification
+
+The new verification checks all six conditions and successor prompts for explicit participant counts and absence of authored leader/mayor cues, and forces invalid nominations through both the original parser and stakes resolver to verify random routing, raw evidence, per-turn keys, applied fallback labels and global-RNG isolation. All 42 tests passed in 17.549 seconds. The stricter six-condition prompt audit also passed (three condition tests, 8.484 seconds): no leader/leadership/mayor words in authored canned-run prompts; correct counts at N8/N16/N32 and for successors. The refreshed fidelity fixtures passed and the disabled path remains byte-identical. Paid neutral-profile smokes follow on the committed source. Earlier results below describe their recorded source versions.
+
 # Current paid-smoke validation complete
 
 All six current-policy Flash-Lite smokes passed check_data.py with 1000 null replicates on 4fdcbb9. Both private instruments parsed at 100% where applicable; harvest option failures were zero. Replica nomination parsing failed once in seven decisions (14.3%, flagged); original fallback was retained. N32 logged two length finishes and continued repository parsing at fixed caps. Cumulative project spend is $0.59763131, with zero pending reservations. See SMOKE_REPORT.md for per-attempt metrics and remaining parser warnings. No full Flash pilot has started; it will be started by the user from tmux. Earlier statuses below are historical.

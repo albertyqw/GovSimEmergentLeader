@@ -42,3 +42,8 @@ def successor_horizon(seed: int, slot: int, cycle: int) -> int:
     if not 0 <= slot < 8 or cycle < 1:
         raise ValueError("Expected a household slot in 0..7 and a one-based cycle")
     return random.Random(f"successor|{seed}|{slot}|{cycle}").randint(3, 8)
+
+
+def nomination_fallback(key, options):
+    """Uniform, independent per-turn fallback; never consumes global RNG."""
+    return random.Random(key).choice(options)

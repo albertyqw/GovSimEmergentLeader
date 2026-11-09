@@ -127,3 +127,14 @@ No original reflection regex, retrieval scores, allocation algorithm, regenerati
 - DATA.md / RUNBOOK.md / SETUP_AUDIT.md / QUIRKS.md / TEST_RESULTS.md / SMOKE_REPORT.md: distinguish the authorized continuing policy from historical length-stop attempts. All original raw attempts and costs remain preserved.
 
 - B8/B10/B11: SMOKE_REPORT.md / TEST_RESULTS.md / RUNBOOK.md record all six validated fixed-cap smokes, original parse/default outcomes, cumulative spending, retained historical attempts and the user-started pilot handoff. This final preparation changes documentation only; simulation source remains the validated 4fdcbb9 source.
+
+## B2/B5/B6/B10/B11 neutral study amendment (user approved after initial pilot)
+
+- METHODS.md / parent copy: explicitly supersede inherited leadership cues and first-name fallback, specify exact count text and per-turn RNG key, preserve the old pilot/tag and require replacement smokes/pilot.
+- All ten study YAMLs: `agent.neutral_study` enables the common amendment; original configs/disabled paths retain pinned behavior.
+- `interventions.py`, `utils.py`, `run.py`, `tenure.py`: exact actual participant-count statement in general prompts, including successor identities.
+- `act_prompts.py`, `leaders.py`, `converse.py`, `converse_prompts.py`: remove scripted mayor/leader roles, use the neutral report in replica too, and replace speaker-endorsement instructions with a neutral sustainability task. No agent-generated free text is rewritten.
+- `discussion.py`, `intervention_randomness.py`, `converse_prompts.py`: pass seed/cycle to all neutral conditions and use uniform keyed fallback among originally offered names, including self; preserve parsing and valid nominations.
+- `recording.py`, `check_data.py`: record/check neutral profile and nomination fallback key, options, candidate and applied status, preserving raw failure evidence.
+- Stub transport, condition/config/exact-text/recording tests: verify all six six-cycle conditions, eight exact constants, neutral/count prompt isolation, stakes succession and forced invalid-nomination routing at N8/N32 without global RNG calls.
+- `tools/build_fidelity.py`, regenerated golden diffs and FIDELITY.md: disclose new common overrides and retain byte-identical disabled-path control. DATA.md / RUNBOOK.md / QUIRKS.md / TEST_RESULTS.md / SMOKE_REPORT.md document the new schema, source version and preserved superseded results.

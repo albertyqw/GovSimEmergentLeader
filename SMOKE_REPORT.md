@@ -1,3 +1,9 @@
+# Neutral amendment: fresh smokes pending
+
+The user approved explicit group size, no scripted leadership cues in any arm, and keyed uniform random invalid-nomination fallback. All earlier smokes and the initial Flash pilot are preserved but superseded for this profile. Caps remain fixed at 16000/1000; all previous spending remains in the ledger ($0.74568173 before the new smokes). All six condition smokes must validate before a user-started replacement pilot on final-runs-v2.
+
+---
+
 # Fixed-cap smoke validation complete
 
 All six one-cycle, seed-0 Flash-Lite smokes passed `check_data.py` with 1000 null replicates on commit `4fdcbb90f299a937140e7d68c2b9f30bc484745e`. Start and end commits match for every attempt. The common paper profile and `repository_parser_fixed_caps` policy were enabled. Generation/find caps stayed 16000; fresh importance caps stayed 1000. No full Gemini 2.5 Flash run has started.

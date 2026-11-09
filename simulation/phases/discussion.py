@@ -61,7 +61,7 @@ class DiscussionPhase(Phase):
           debug=ctx.debug,
           **(
               {"intervention_seed": ctx.cfg.seed, "intervention_cycle": ctx.round_num + 1}
-              if getattr(agent.cfg.converse, "seeded_opener", False)
+              if getattr(agent.cfg.converse, "seeded_opener", False) or getattr(agent.cfg, "neutral_study", False)
               else {}
           ),
       )

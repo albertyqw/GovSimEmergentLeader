@@ -306,6 +306,7 @@ class RunRecorder:
             "temperature": self.config.llm.temperature, "top_p": self.config.llm.top_p,
             "max_tokens": {"generation": getattr(self.config.experiment.agent, "study_generation_max_tokens", 8000), "fresh_importance": 1000}, "thinking": "default; no budget or effort set",
             "paper_definitions": bool(getattr(self.config.experiment.agent, "paper_definitions", False)),
+            "neutral_study": bool(getattr(self.config.experiment.agent, "neutral_study", False)),
             "truncation_policy": "repository_parser_fixed_caps",
             "pip_freeze": subprocess.check_output([os.sys.executable, "-m", "pip", "freeze", "--disable-pip-version-check"], text=True).splitlines(),
             "python": platform.python_version(), "os": platform.platform(), "start_time": self.started, "end_time": utc_now(),
@@ -410,6 +411,8 @@ class RecordingWrapper(StudyModelWrapper):
             for operation in record.get("parse_operations", []):
                 name = operation["name"]
                 if operation["status"] == "failed" and name in getattr(result, "_variables", {}):
+                    if name == "next_speaker" and record.get("nomination_fallback") is not None:
+                        record["nomination_fallback"]["applied"] = True
                     operation["fallback_applied"] = True
                     operation["fallback_value"] = safe(result[name])
                     record["parsed_output"][name] = safe(result[name])

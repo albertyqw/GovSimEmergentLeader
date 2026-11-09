@@ -105,3 +105,4 @@ agent:
   lake_scale: 2
   paper_definitions: true
   study_generation_max_tokens: 16000
+  neutral_study: true

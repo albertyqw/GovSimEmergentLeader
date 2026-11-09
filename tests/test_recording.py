@@ -42,6 +42,43 @@ class RecordingTest(unittest.TestCase):
                 self.assertIn(f"{row['identity']} caught {row['actual']} tons of fish", cycle["report_text"])
             self.assertTrue(check_run(path, null_samples=1)["valid"])
 
+    def test_invalid_nominations_use_keyed_uniform_draw_and_keep_failure_evidence(self):
+        from simulation.intervention_randomness import nomination_fallback
+        import random
+        selections = set()
+        for condition in ("replica_N8", "stakes_N8", "coord_N32"):
+            with self.subTest(condition=condition), tempfile.TemporaryDirectory() as temp:
+                cfg = compose_study_config(condition, 0, cycles=1)
+                path = Path(temp) / "run"
+                recorder = RunRecorder(path, condition, 0, cfg)
+                wrapper = RecordingWrapper(StubModel(nomination_style="invalid", turns=5), recorder,
+                                           render=False, wanbd_logger=StubLogger(),
+                                           temperature=0.0, top_p=1.0, seed=0, is_api=True)
+                with contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings(record=True):
+                    asyncio.run(run(cfg.experiment, wrapper.wanbd_logger, wrapper, wrapper, str(path)))
+                turns = read_jsonl(path / "utterances.jsonl.gz")
+                calls = read_jsonl(path / "calls.jsonl.gz")
+                for turn, following in zip(turns, turns[1:]):
+                    fallback = turn["nomination_fallback"]
+                    self.assertTrue(fallback["applied"])
+                    self.assertEqual(fallback["key"], f"nominee_fallback|0|1|{turn['position']}")
+                    expected = nomination_fallback(fallback["key"], fallback["options"])
+                    expected = expected.split(" [", 1)[0]
+                    self.assertEqual(turn["nominee_resolved"], expected)
+                    self.assertEqual(following["speaker_identity"], expected)
+                    self.assertEqual(turn["nominee_raw"], "Anonymous Leader")
+                    selections.add(expected)
+                failures = [op for c in calls for op in c["parse_operations"]
+                            if op["name"] == "next_speaker" and op["status"] == "failed"]
+                self.assertEqual(len(failures), 4)
+                self.assertTrue(all(op.get("fallback_applied") for op in failures))
+                self.assertTrue(check_run(path, null_samples=1)["valid"])
+                # Test just the new draw against the global RNG; the native run has its own original draws.
+                state = random.getstate()
+                nomination_fallback("nominee_fallback|0|1|0", list(NAME_POOL[:8]))
+                self.assertEqual(random.getstate(), state)
+        self.assertGreater(len(selections), 1)
+
     def test_stakes_nominations_resolve_tags_bare_case_and_partial_names(self):
         for style in ("tagged", "bare", "lowercase", "partial"):
             with self.subTest(style=style), tempfile.TemporaryDirectory() as temp:

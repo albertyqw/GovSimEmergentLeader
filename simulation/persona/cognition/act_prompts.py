@@ -44,7 +44,8 @@ def prompt_action_choose_amount_of_fish_to_catch(
     )
     lm += f"Current context: {context}\n"
     if not (
-        getattr(agent.cfg.act, "drop_mayor_line", False)
+        getattr(agent.cfg, "neutral_study", False)
+        or getattr(agent.cfg.act, "drop_mayor_line", False)
         and leader_agenda in (None, "", persona_lib.DEFAULT_AGENDA)
     ):
       lm += (

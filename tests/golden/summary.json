@@ -7,37 +7,37 @@
   },
   "replica_N8": {
     "requests": 77,
-    "sha256": "b4463fc42dd049dd2e5e24a944ceb5fccedd11daf0bc6c8fd6651af6e8508d8e",
+    "sha256": "e3ce5ed82e3a68950b14f01ee68e7203b06bf7c9a534288a5731585b62e79e5c",
     "diff_file": "tests/golden/replica_N8.diff",
     "matches_original": false
   },
   "baseline_N8": {
     "requests": 93,
-    "sha256": "d8d82be2cfb2c54b9e4ece8e3c3b058b0412e46cb745bdbd5d164cf41ada7cf5",
+    "sha256": "dd702f524a41455139c2a876ef4510c0ca28063ca61f2f4421b048ee7cc6a897",
     "diff_file": "tests/golden/baseline_N8.diff",
     "matches_original": false
   },
   "values_N8": {
     "requests": 93,
-    "sha256": "76fa071eb8dabdb297bfb0b5c0417c599d4fc82eb5146ebc793c6f0458cf7d3f",
+    "sha256": "0e53596fe23838e8e0f24e1c3a1841f7568f0c6055436556ef37b57d953d39ee",
     "diff_file": "tests/golden/values_N8.diff",
     "matches_original": false
   },
   "stakes_N8": {
     "requests": 93,
-    "sha256": "25b4202a85f573c3f60457a7c7b40024c6c05ed9f73ef7057dd4e7f88cfd03b5",
+    "sha256": "983931b9e202b8c09a206353ef1bde7fa98abbec515fde853344816d99651471",
     "diff_file": "tests/golden/stakes_N8.diff",
     "matches_original": false
   },
   "coord_N16": {
     "requests": 181,
-    "sha256": "744a6f2caa8dab3437056e3ba6488ed5d5eaa2102923c9e9b177dabb2a9d5cc6",
+    "sha256": "c1a8111a7cee08a56566bc28e76036c588ec464fa4de2aa3c41cedfcb5707ecf",
     "diff_file": "tests/golden/coord_N16.diff",
     "matches_original": false
   },
   "coord_N32": {
     "requests": 357,
-    "sha256": "813724511c8e8aee4a6245e25e37a6709eda739735a24ad6d0d72aa0b47cc2e4",
+    "sha256": "1b6ca0c3b3b8c67cb7eb88a7bbc3933309913a129fef0945e6f977fdef980309",
     "diff_file": "tests/golden/coord_N32.diff",
     "matches_original": false
   }

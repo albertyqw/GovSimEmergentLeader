@@ -101,6 +101,13 @@ def check_run(path, null_samples=1000):
         for position, turn in enumerate(cycle_turns):
             require(turn["position"] == position and turn["call_id"] in ids, "Turn ordering or call link is invalid")
             require("nominee_options" in turn and "nominee_options_rendered" in turn, "Offered nominee options were not captured")
+            if metadata.get("neutral_study") and not turn["end_conversation"]:
+                draw = turn.get("nomination_fallback") or {}
+                require(draw.get("key") == f"nominee_fallback|{metadata['seed']}|{cycle['cycle']}|{position}",
+                        "Nomination fallback RNG key missing or incorrect")
+                require(draw.get("candidate") in turn["nominee_options_rendered"] and "applied" in draw,
+                        "Nomination fallback draw/options/status missing")
+
         for catch in cycle["catches"]:
             require(catch["actual"] >= 0 and catch["actual"] <= max(catch["requested"], 0), "Invalid actual catch")
             totals[catch["slot"]] += catch["actual"]

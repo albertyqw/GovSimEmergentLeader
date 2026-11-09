@@ -53,7 +53,7 @@ class ConverseComponent(component.Component):
     if leader_persona:
       current_leader_id = leader_persona.identity
     else:
-      if getattr(self.cfg, "neutral_announcer", False):
+      if (getattr(self.cfg, "neutral_announcer", False) or getattr(self.persona.cfg, "neutral_study", False)):
         current_leader_id = common.PersonaIdentity("framework", "Announcer")
       else:
         current_leader_id = common.PersonaIdentity(
@@ -86,7 +86,7 @@ class ConverseComponent(component.Component):
         and self.cfg.inject_resource_observation_strategy
         == "manager"
     ):
-      if getattr(self.cfg, "neutral_announcer", False) and not leader_persona:
+      if (getattr(self.cfg, "neutral_announcer", False) or getattr(self.persona.cfg, "neutral_study", False)) and not leader_persona:
         current_conversation.append(
             (current_leader_id, ANNOUNCER_TEMPLATE.format(report=harvest_report))
         )
@@ -167,6 +167,10 @@ class ConverseComponent(component.Component):
             f"{self.cfg.prompt_utterance}"
         )
 
+      if getattr(self.persona.cfg, "neutral_study", False):
+        if intervention_seed is None or intervention_cycle is None:
+          raise ValueError("Neutral study nominations require seed and cycle")
+        current_persona.nomination_fallback_key = f"nominee_fallback|{intervention_seed}|{intervention_cycle}|{len(turn_records)}"
       utterance, end_conversation, next_name, h = prompt(
           self.model,
           current_persona,
@@ -191,6 +195,7 @@ class ConverseComponent(component.Component):
               getattr(current_persona, "last_nominee_raw", next_name)),
           "nominee_resolved": next_name, "end_conversation": end_conversation,
           "call_ids": observed_turn.get("call_ids", []),
+          "nomination_fallback": getattr(current_persona, "nomination_fallback", None),
           "nominee_options": [] if end_conversation else [p.identity.name for p in target_personas],
           "nominee_options_rendered": [] if end_conversation else [render_name(p.identity) for p in target_personas],
       })

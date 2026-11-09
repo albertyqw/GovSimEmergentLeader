@@ -15,3 +15,6 @@ ELICITATION_PROMPT = 'Before this month\'s discussion begins, answer privately. 
 ELICITATION_PROMPT_FINAL_MONTH = 'Before this month\'s discussion begins, answer privately. No one else will see your answers.\n1. What per-person limit, if any, do you think the group should agree on for next month? Give a number of tons, or "none".\n2. In one sentence, what is your main reason?\nAnswer in exactly this format:\nLIMIT: <number or none>\nREASON: <one sentence>'
 
 PERCEIVED_LEADERSHIP_PROMPT = "The discussion has ended. Answer privately; no one else will see your answer.\nIn this month's discussion, whose suggestions, if anyone's, most influenced what the group decided? Answer with one name or 'no one.'\nAnswer in exactly this format:\nANSWER: <name or no one>"
+
+
+PARTICIPANT_COUNT_TEMPLATE = "There are {n} fishermen fishing in this lake, including you."

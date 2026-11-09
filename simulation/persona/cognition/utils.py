@@ -269,6 +269,10 @@ def get_sytem_prompt_v3(persona):
   if getattr(persona, "paper_definitions", False):
     text = text.replace(" At the end of the month, the remaining fish will reproduce and double once, up to the carrying capacity.", "")
 
+  if getattr(persona, "neutral_study", False):
+    from simulation.interventions import PARTICIPANT_COUNT_TEMPLATE
+    text += "\n\n" + PARTICIPANT_COUNT_TEMPLATE.format(n=persona.participant_count)
+
   if persona.goals != "":
     text += persona.goals
 

@@ -59,7 +59,7 @@ def main():
             current = output.read_text()
             prompts = [message["content"] for row in json.loads(current) for message in row["request"]["messages"]]
             markers = {
-                "replica_N8": "The current policy following the mayor's agenda",
+                "replica_N8": "There are 8 fishermen",
                 "baseline_N8": "Here is the monthly fishing report:",
                 "values_N8": "You are a fisherman in the fishing community",
                 "stakes_N8": "[months remaining:",
@@ -86,8 +86,9 @@ def main():
                     "constructor repair. A fixed original opener controls the comparison state. Full sorted requests and canned "
                     "responses are hashed; unified diffs cover every request type. The disabled-override original path matches byte for byte. "
                     "All study conditions, including replica, use the approved common paper definitions, ten-entry recall, aligned prompts "
-                    "and 16000/1000 token caps. These are disclosed exceptions to the pinned source. Live routing is also an approved exception.\n"]
+                    "and 16000/1000 token caps. These are disclosed exceptions to the pinned source. Live routing and the user-approved common neutral study amendment (explicit group size, no scripted leadership cues, keyed uniform invalid-nomination fallback) are also approved exceptions.\n"]
         locations = {
+            "PARTICIPANT_COUNT_TEMPLATE": "simulation/persona/cognition/utils.py:get_sytem_prompt_v3",
             "ANNOUNCER_TEMPLATE": "simulation/persona/cognition/converse.py",
             "VALUES_AGENDA": "simulation/conf/experiment/values_N8*.yaml; simulation/persona/cognition/utils.py",
             "STAKES_TAG_FORMAT": "simulation/persona/cognition/utils.py:render_name",
@@ -99,7 +100,7 @@ def main():
         for name, location in locations.items():
             sections.append(f"\n## B5 {name}\n\nExact specification text, stored in `simulation/interventions.py`; rendered by `{location}`. "
                             f"The character-equality test checks it against METHODS.md.\n\n```text\n{getattr(interventions, name)}\n```\n")
-        sections.append("\n## Condition excerpts and complete diffs\n\nBaseline removes the mayor and truthfulness lines behind flags. "
+        sections.append("\n## Condition excerpts and complete diffs\n\nAll study arms remove scripted mayor/leader cues under the common neutral amendment. "
                         "Values adds focal goals and paper-aligned SVO text with privacy. All arms share paper-aligned honesty, system-text correction, ten-entry recall and 16000/1000 caps. Stakes adds current tags and the household instruction; "
                         "its resolver strips tags before identity matching. Coordination scales lake numbers and participant lists. "
                         "Private instruments reuse the original prefix and add the approved public-report context. "

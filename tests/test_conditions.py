@@ -68,12 +68,16 @@ class ConditionsTest(unittest.TestCase):
                 prompts = [row["request"]["messages"][0]["content"] for row in transport.requests]
                 for text in prompts:
                     self.assertNotRegex(text.lower(), r"6 cycles|six months|final month|last month of the game")
-                    if condition != "replica_N8":
-                        self.assertNotIn("The current policy following the mayor's agenda", text)
-                        self.assertNotIn("As a leader, you will now craft your policy agenda", text)
+                    self.assertNotIn("The current policy following the mayor's agenda", text)
+                    self.assertNotIn("As a leader, you will now craft your policy agenda", text)
                     if "Task: With a fishing range" in text or "Scenario:" in text:
                         self.assertIn(HONESTY_PROMPT, text)
                     self.assertNotIn("will reproduce and double once", text)
+                    self.assertNotRegex(text.lower(), r"\b(?:leader|leadership|mayor)\b")
+                    self.assertNotIn("Anonymous Leader", text)
+                    self.assertNotIn("highlight qualities", text)
+                    if "You are " in text:
+                        self.assertIn(f"There are {n} fishermen fishing in this lake, including you.", text)
                 for row in transport.requests:
                     request = row["request"]
                     fresh = request["messages"][-1]["content"].startswith("Rating (1 to 10):")
