@@ -85,3 +85,9 @@ The A10 coordination nulls keep the recorded opener and utterance count for airt
 - B12 final audit: an error completion with unknown actual cost halts and retains its worst-case reservation instead of assuming zero cost. The local SDK test verifies this conservative accounting path; paid smoke attempts have not exercised this error path.
 
 - B11/B14: `SMOKE_REPORT.md` records accepted and interrupted Flash-Lite attempts, preserved raw-data paths, costs and the token-limit decision required before continuing. No caps, original prompts or simulation behavior were changed.
+
+## User-approved methods amendment and paper audit
+
+- A5 / A11 / B2 / B9 / B10 / B11 / B14: amend METHODS.md, at the user's explicit request, to specify 16000 generation/find/private-instrument tokens consistently across all conditions, retaining 1000 fresh importance ratings. Distinguish the study override from untouched original wrapper defaults and permit only that payload difference in fidelity checks. Rerun all six smokes after implementation; retain prior data and spending. The parent METHODS.md copy is synchronized, and exact B5 strings are unchanged.
+- B1.3 / B10.4: extend SETUP_AUDIT.md with a primary-source paper/code cross-check and add newly observed original quirks to QUIRKS.md. Record threshold, centrality, recall, altruistic sampling, prompt and timing differences without changing their implementations or resolving new scientific choices automatically.
+- This explicitly supersedes earlier "unchanged METHODS.md" and 8000-cap preservation statements only for the approved token-cap amendment. Historical smoke results, payload hashes and previous approvals remain records of their original states.

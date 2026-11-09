@@ -1,9 +1,9 @@
 # Conditions for Emergent Leadership in GovSim
 ## Methods and implementation specification
 
-**Version:** final, November 2026. This document supersedes `CLAUDE_CODE_PROMPT.md` and the earlier setup-differences doc.
+**Version:** final, November 2026; token-cap amendment approved 8 November 2026. This document supersedes `CLAUDE_CODE_PROMPT.md` and the earlier setup-differences doc.
 
-**How to use it.** Part A is the methods section for the research report: every design decision and its rationale. Part B is the binding implementation specification for the coding agent. Where Part A and Part B differ in detail, Part B governs implementation. Commit this file unchanged to the repository root as `METHODS.md`; fidelity tests read intervention texts from it.
+**How to use it.** Part A is the methods section for the research report: every design decision and its rationale. Part B is the binding implementation specification for the coding agent. Where Part A and Part B differ in detail, Part B governs implementation. Preserve this file as `METHODS.md`, except for explicit user-approved amendments; fidelity tests read intervention texts from it.
 
 ---
 
@@ -33,7 +33,7 @@ Six conditions, five seeds each, 30 runs.
 
 | Condition | N | Role |
 |---|---|---|
-| Replica | 8 | Unmodified AgentElect No-Leader setup; comparability anchor and drift check |
+| Replica | 8 | AgentElect No-Leader setup with disclosed implementation exceptions, including the common token-cap amendment; comparability anchor and drift check |
 | Baseline | 8 | Leaderless control with leader cues removed; negative control for all arms |
 | Values and plan | 8 | Intervention |
 | Stakes (tenure) | 8 | Intervention |
@@ -61,7 +61,7 @@ The lake holds 100 tons (scaled in the coordination arm), starts full, and colla
 | Model | Gemini 2.5 Flash via OpenRouter | One of AgentElect's three models |
 | Temperature | 0.0 | As AgentElect |
 | Thinking | Default dynamic, no budget set | AgentElect used thinking and reported no budget |
-| Max output tokens | 8,000 | The code's value. The paper states at least 16,000; see A11 |
+| Max output tokens | 16,000 for generation/find calls; 1,000 for fresh importance ratings | User-approved common override for every condition, including the replica. The paper reports at least 16K; its exact integer cap is unspecified. See B2 and B14 |
 | Provider | One upstream provider, pinned | Avoids mixing serving stacks |
 
 All framework calls (summary, limit extraction) use the same model, as in the code.
@@ -159,7 +159,7 @@ The replica runs first. Its five runs are compared with AgentElect's published G
 | Survival rate | 0.90 ± 0.11 | 0.80 ± 0.14 |
 | Equality | 0.65 ± 0.02 | 0.70 ± 0.02 |
 
-A replica metric outside the range spanned by both rows, widened by our standard error, is flagged. A single flagged metric is weak evidence at five seeds; several flagged in the same direction indicate drift. Known sources of drift: the code at the pinned commit may differ from the paper's runs (the paper describes a 16,000-token output limit and a different truthfulness prompt than the code contains), and upstream serving may differ.
+A replica metric outside the range spanned by both rows, widened by our standard error, is flagged. A single flagged metric is weak evidence at five seeds; several flagged in the same direction indicate drift. Known sources of drift: the code at the pinned commit may differ from the paper's runs (the paper reports at least 16K output tokens and a different truthfulness prompt than the code contains; our common 16,000-token override is an explicit departure from the pinned code, not proof of the exact cap used in the paper), and upstream serving may differ.
 
 ## A12. Budget and safeguards
 
@@ -215,7 +215,7 @@ Estimated cost is $90–100 for 30 runs with dynamic thinking, at OpenRouter's r
 | Discussion limit | 50 (`max_conversation_steps: 50`), framework messages included |
 | Model | `google/gemini-2.5-flash` via OpenRouter, for all agent and framework calls |
 | Temperature / top_p | 0.0 / 1.0 |
-| Max output tokens | 8,000, the code's existing value. Do not change it (see B14) |
+| Max output tokens | 16,000 for generation/find calls and the new private instruments, consistently across all six conditions (replica included) and Flash-Lite smoke tests. Preserve the original 1,000-token cap on fresh importance-rating selections. This is the user-approved exception to pinned-code payload fidelity (see B14) |
 | Thinking | Do not set a reasoning budget or effort |
 | Provider | Pin one upstream provider with OpenRouter provider routing, fallbacks off. If it is unavailable for a call, retry; never silently switch |
 | Seeds | 0, 1, 2, 3, 4 |
@@ -398,8 +398,8 @@ N-agent conditions use the first N names. Stakes successors take the next unused
 Build a deterministic **stub LLM** that returns canned, parseable outputs for every call type (harvests, utterances with nominations, elicitation, perceived leadership, summaries, reflections), so every condition runs end to end at no cost.
 
 **Nothing else changed**
-- With all flags off, rendered prompts and captured API request payloads match the original commit byte for byte at a fixed game state.
-- Golden prompt diffs for every prompt type and condition against the original commit, saved to `tests/golden/`. Allowed differences only: B3 changes; values text for the focal agent; tags and instruction in stakes; scaled numbers and names at N=16 and 32.
+- With all intervention flags and the study token-cap override off, rendered prompts and captured API request payloads match the original commit byte for byte at a fixed game state. With the study override on, allow only the B2 max-token change in otherwise matching requests; verify 16,000 for generation/find calls and 1,000 for fresh importance ratings in every condition.
+- Golden prompt diffs for every prompt type and condition against the original commit, saved to `tests/golden/`. Allowed differences only: the common B2 token-cap override; B3 changes; values text for the focal agent; tags and instruction in stakes; scaled numbers and names at N=16 and 32.
 - Calls per phase per cycle equal the original's plus elicitation and perceived-leadership calls where flagged.
 - With N=8, the parameterized system prompt renders the original text byte for byte.
 - Each new YAML differs from the original only in permitted fields.
@@ -431,7 +431,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 2. Add, don't edit: implement each change as a guarded branch, leaving the original code path to run verbatim when its flag is off.
 3. Never run formatters, linters, or auto-fixers on existing files.
 4. Don't fix original bugs or quirks unless this document names them. Record each in `QUIRKS.md` with file and line.
-5. Leave untouched: memory retrieval and storage, reflection and summary prompts, parsing regexes, agreed-limit extraction, sampling parameters, the model wrapper's retry behavior, and phase order.
+5. Leave untouched: memory retrieval and storage, reflection and summary prompts, parsing regexes, agreed-limit extraction, sampling parameters other than the explicit B2 token-cap override, the model wrapper's retry behavior, and phase order. Apply the common cap through a study-only override; preserve the original wrapper defaults and the original path when that override is disabled.
 6. Logging only observes requests and responses: no added messages, changed parameters, or reordering.
 7. One commit per item in this document, with the section number in the message.
 8. `CHANGES.md` maps every hunk of `git diff 8cf0aba` to a section of this document. Revert any hunk that maps to none.
@@ -443,7 +443,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 **Who runs what.** You run stub tests and the one-cycle Flash-Lite smoke tests yourself. Every full run on Gemini 2.5 Flash (the pilot, the replica seeds, and every wave) is started by me, from tmux on the remote machine, using the launcher command you give me. After I start a run, you monitor it by reading its logs and do the checks and reports below.
 
 
-1. **Smoke test** on `google/gemini-2.5-flash-lite`: one cycle of every condition, seed 0. Fix what breaks. Run `check_data.py` (below) on each.
+1. **Smoke test** on `google/gemini-2.5-flash-lite`: one cycle of every condition, seed 0. Fix what breaks. Run `check_data.py` (below) on each. Following the approved token-cap amendment, rerun all six condition smokes with the common 16,000/1,000 caps before the full pilot. Preserve all earlier 8,000-token attempts and include their spending in the project ledger.
 2. **Replica pilot:** replica, seed 0, on `google/gemini-2.5-flash`. Report: tokens, cost, wall-clock time, cached-token share, mean reasoning tokens per call, calls ending on the length limit (must be 0; if any, STOP), parse-failure rates for harvests and nominees (flag above 3%), and logged spend reconciled with the OpenRouter balance change (within 5%). Write one full cycle of prompts and responses to `pilot_transcript.md`. Include `CHANGES.md`, `FIDELITY.md`, `QUIRKS.md`, all test results, the storage-size estimate, and a cost projection for all 30 runs. **STOP.**
 3. **Replica seeds 1–4.** Then write `REPLICA_CHECK.md`: the A11 comparison, computed with AgentElect's own analysis code in `simulation/analysis/` where it exists (state exactly how any metric is reconstructed), with mean and standard error over our 5 seeds, per-run survival time, final stock, and mean regen factor, and flags as defined in A11. **STOP.**
 4. **Re-project cost** from the five replica runs. Never start a wave projected to push total spend past $90; STOP and ask instead.
@@ -471,7 +471,7 @@ Build a deterministic **stub LLM** that returns canned, parseable outputs for ev
 
 | Item | Paper | Code at `8cf0aba` | Resolution |
 |---|---|---|---|
-| Max output tokens | "At least 16K" | `max_tokens=8000` in every wrapper call | Follow the code. If the pilot shows any length-limit truncation, STOP; I will decide whether to raise it for every condition |
+| Max output tokens | At least 16K; exact integer unspecified | Generation/find defaults are 8000; fresh importance selections use 1000 | User approved a 16,000-token study override for generation/find and private instrument calls across every condition, including replica, while retaining fresh importance ratings at 1000. Preserve original wrapper defaults behind the disabled override. Rerun all six smokes, retain prior attempts/costs, and STOP for review if the pilot still truncates |
 | Truthfulness prompt | "Be honest and explicit about your reasoning…" | Agenda-crafting text beginning "As a leader, you will now craft your policy agenda" | Follow the code in the replica; dropped elsewhere (B3) |
 | SVO secrecy line | "Do not reveal your SVO angle…" | No such line | Follow the code; add none (B4.3) |
 | SVO prompt typo | n/a | "You are an leader" | Replaced only in the values arm's fisherman version (B4.3) |
