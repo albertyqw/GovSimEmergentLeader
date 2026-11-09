@@ -1,3 +1,16 @@
+# Current paper-first validation
+
+- 39 tests passed with all six conditions running six native stub cycles.
+- Six additional CLI workers wrote full standardized/native logs and passed check_data.py under the amended profile (10 null replicates for this tool check). All private answers parsed, harvest/nominee failures were zero, and costs were zero because the transport was stubbed.
+- Dedicated tests cover fractional/full-capacity threshold boundaries at N8/N16/N32, keyed altruistic range through 90, preserved disabled sampling, incoming degree, inverse-distance path selection and fractional credit for exact tied paths.
+- Current private-call isolation checks retain byte-identical memory with instruments disabled/enabled. All study payloads use 16000 generation/find and 1000 fresh importance caps; requested recall is ten and recorded independently of returned count.
+- The disabled common/arm override fixture matches pinned original requests byte for byte after the approved constructor repair. Study gold files intentionally include common paper changes and arm interventions; source hashes/diffs are in tests/golden and FIDELITY.md.
+- Resume dry checks against all six old smoke conditions select fresh attempt directories; no old raw file was changed.
+
+Paid amended-profile smoke validation is next. No full Flash run has started. The sections below are historical evidence from earlier profiles and do not replace current smoke validation.
+
+---
+
 # Pre-smoke validation
 
 Validation on this Mac with the isolated Python 3.11.16 environment; no paid model calls were used for these checks.

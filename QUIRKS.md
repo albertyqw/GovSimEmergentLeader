@@ -93,3 +93,7 @@ These observations do not authorize changes to original simulation behavior.
 - The new user-approved methods amendment supersedes the earlier decision to keep 8000 generation tokens for study runs. Original 8000/1000 defaults are still preserved in source; implementation of a study-only 16000/1000 override is pending. Earlier approvals to preserve the reflection regex and other quirks remain in force.
 
 Detailed paper links, code evidence, implications and limits are recorded in SETUP_AUDIT.md under "Paper cross-check".
+
+## Superseding paper-first decision
+
+The user approved paper definitions for threshold, degree, betweenness, ten-entry recall and altruistic bounds, plus paper-aligned honesty/privacy and removal of the extra doubling sentence. Study flags now override those specific original discrepancies. This supersedes earlier preservation decisions for those items only. Original paths and constants remain when flags are off; original social.py and retrieve.py are untouched. Unspecified implementation choices (integer regeneration, depletion transition timing and malformed insight regex) remain as disclosed. See METHODS B2 for exact amended scope and SETUP_AUDIT for verification.

@@ -91,3 +91,23 @@ The A10 coordination nulls keep the recorded opener and utterance count for airt
 - A5 / A11 / B2 / B9 / B10 / B11 / B14: amend METHODS.md, at the user's explicit request, to specify 16000 generation/find/private-instrument tokens consistently across all conditions, retaining 1000 fresh importance ratings. Distinguish the study override from untouched original wrapper defaults and permit only that payload difference in fidelity checks. Rerun all six smokes after implementation; retain prior data and spending. The parent METHODS.md copy is synchronized, and exact B5 strings are unchanged.
 - B1.3 / B10.4: extend SETUP_AUDIT.md with a primary-source paper/code cross-check and add newly observed original quirks to QUIRKS.md. Record threshold, centrality, recall, altruistic sampling, prompt and timing differences without changing their implementations or resolving new scientific choices automatically.
 - This explicitly supersedes earlier "unchanged METHODS.md" and 8000-cap preservation statements only for the approved token-cap amendment. Historical smoke results, payload hashes and previous approvals remain records of their original states.
+
+## Common paper-first profile (explicit user approval)
+
+| Files / hunks | Requirement / authorization | Purpose |
+|---|---|---|
+| `METHODS.md` and parent copy | User paper-first hierarchy; B2/B9/B10/B14 amendment | Specify all five paper definitions, aligned prompt semantics, guard boundaries and exceptions; retain exact B5 texts and deliberate arms. |
+| `simulation/paper_definitions.py` (new) | Amended B2/B6 | Paper threshold, isolated keyed SVO ranges and exact study instruction strings. Honesty is transcribed; deception/privacy are disclosed semantic paraphrases. |
+| Ten study YAMLs | Amended B2/B7 | Enable common environment/agent paper flags and 16000 generation cap in every arm, including replica. |
+| `concurrent_env.py` threshold guarded return | Amended B2 | Use the full-capacity equation without an extra floor; preserve original formula when disabled. |
+| `leaders.py` optional sampling parameters and paper prompt branch; `run.py` flag/seed/identity setup; `tenure.py` successor properties | Amended B2/B6 | Use altruistic bounds through 90 with dedicated keys, add focal-only privacy, align SVO prose, and propagate common truthfulness/profile state to successors. No new study leaders are added. |
+| `converse.py`, `measurement_prompts.py` recall branches | Amended B2/B4 | Request ten memories while retaining original retrieval internals and private-call isolation. |
+| `act_prompts.py`, `converse_prompts.py`, private prefix; `utils.py` system branch | Amended B2 | Add common paper honesty to strategic prompts and remove only the extra fixed-doubling sentence, preserving original disabled branches and separate baseline leader-cue removal. |
+| `simulation/study_models.py` (new), `recording.py` inheritance/effective metadata | Amended B2/B8 | Apply 16000 generation/find caps outside the untouched original wrapper; fresh importance selections remain 1000. Log profile and requested retrieval limits. |
+| `study_analysis.py` | Amended A10/B2 | Use incoming degree and directed inverse-weight fractional betweenness, including exact rational ties and matching nulls; explicitly select legacy conventions for historical profiles. |
+| `check_data.py`, `run_study.py` | B8/B11 | Check amended threshold/caps/recall and compare resolved config before skipping any old completion. Preserve all original attempts. |
+| `tests/test_paper_definitions.py` (new), analysis/condition/measurement/config/stub tests | B9 | Verify boundary cases and both paths, exact tied-path credit, keyed bounds, semantic/private prompt changes, current instrument isolation and captured caps. |
+| Fixture helpers, gold diffs and FIDELITY.md | B9/B10 | Prove disabled-override byte fidelity separately from approved study deviations; capture all six amended study payload sets. |
+| DATA.md / RUNBOOK.md / SETUP_AUDIT.md / QUIRKS.md / TEST_RESULTS.md | B8/B10/B11 | Update current schemas, semantics, verification and historical-versus-current evidence. |
+
+No original reflection regex, retrieval scores, allocation algorithm, regeneration truncation or dependency pin was repaired or upgraded. The user-approved paper changes are common across all arms. Legacy files and raw attempts remain immutable; old validation reports do not establish success for the new profile.
