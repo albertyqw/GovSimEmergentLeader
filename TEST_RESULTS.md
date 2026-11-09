@@ -17,3 +17,7 @@ Remaining phase: one-cycle paid Flash-Lite smoke for each condition, followed by
 The first replica Flash-Lite attempt reached normal termination (lake collapse in cycle 1), then failed strict data validation because the observer did not account for the original Markdown reader dropping blank lines. The shared guard stopped the concurrent baseline attempt. All missing node links in the completed replica were traced to this mismatch. No simulation logic was changed. The observer repair is covered by a multiline-memory six-cycle test; both initial attempts are retained and their approximately $0.067 cost stays in the ledger. Fresh smoke attempts follow on the repaired commit.
 
 The final SDK checks also cover unknown partial-response cost: halt and retain the reservation rather than count an unknown charge as zero. The first-stakes launcher guard was checked directly with failed-attempt and early-collapse metadata fixtures, without starting any full worker.
+
+## Paid smoke status
+
+Four conditions validated: replica, baseline, values and stakes. N=32 hit the unchanged 8000-token generation limit twice; the shared guard halted it and the concurrent N=16 smoke. All attempts and costs are preserved. See SMOKE_REPORT.md. Full pilot preparation is pending user review; no full Flash run has started.

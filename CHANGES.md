@@ -83,3 +83,5 @@ The A10 coordination nulls keep the recorded opener and utterance count for airt
 - B11 launcher audit: a halted first stakes attempt does not satisfy the first-completed-run gate. Keep its restart alone and apply the early-collapse STOP rule to the first finished attempt. Checked the actual gate block with temporary failed/collapsed metadata fixtures; no full worker was started.
 
 - B12 final audit: an error completion with unknown actual cost halts and retains its worst-case reservation instead of assuming zero cost. The local SDK test verifies this conservative accounting path; paid smoke attempts have not exercised this error path.
+
+- B11/B14: `SMOKE_REPORT.md` records accepted and interrupted Flash-Lite attempts, preserved raw-data paths, costs and the token-limit decision required before continuing. No caps, original prompts or simulation behavior were changed.
