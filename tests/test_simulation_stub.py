@@ -57,7 +57,12 @@ class SimulationStubTest(unittest.TestCase):
             self.assertTrue(all(row["resource_collected"] == 2 for row in harvests))
             self.assertTrue(all(row["resource_in_pool_before_harvesting"] <= 100 for row in harvests))
             self.assertTrue(transport.requests)
-            self.assertTrue(all(record["request"]["max_tokens"] == 8000 for record in transport.requests))
+            for record in transport.requests:
+                request = record["request"]
+                fresh_rating = request["messages"][-1]["content"].startswith("Rating (1 to 10):")
+                self.assertEqual(request["max_tokens"], 1000 if fresh_rating else 8000)
+            regex_warnings = [w for w in captured if "missing ) at position" in str(w.message)]
+            self.assertEqual(len(regex_warnings), 48)
             self.assertTrue((Path(temp) / "persona_0/MEMORY.md").exists())
 
     def test_neutral_report_is_public_and_opener_matches_keyed_slot(self):

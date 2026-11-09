@@ -57,11 +57,11 @@ These observations do not authorize changes to original simulation behavior.
 - `ModelAPI` initializes `max_tokens` to 1000. Generation sets it to 8000, but `select` does not change it. Importance ratings start fresh chains with `select` and therefore request 1000 tokens.
 - A one-cycle N=8 transport stub captured 45 requests with an 8000-token cap and 32 with a 1000-token cap; all 32 shorter-cap requests were importance ratings. The original adapter and wrapper were used unchanged.
 - B2/B14 assume 8000 for all calls, while B9/B10 require original request fidelity and unchanged sampling parameters. No cap has been changed. The six-cycle stub completed but its strict all-8000 assertion fails.
-- Status: awaiting the user's interpretation before changing the test expectation or any request parameters.
+- Resolution: the user explicitly approved preserving original token caps and updating the test expectations. Generation requests remain at 8000 and fresh importance-rating requests at 1000; no request parameters are changed.
 
 ## B9 / B10: Original insight-reflection regex triggers the default fallback
 
 - Location: `simulation/persona/cognition/reflect_prompts.py:37-44` (pinned-source reference).
 - The insight-generation stop pattern contains an unmatched opening parenthesis after an escaped backslash. Pathfinder wraps and compiles that pattern; the original model wrapper catches the regex error and substitutes its empty default for the insight.
 - The actual one-cycle stub produced eight regex warnings (one per N=8 agent), while the simulation still completed. The warnings begin `An exception occured: missing ) at position 14`.
-- The reflection prompt and regex remain unchanged under B10. No repair or warning suppression has been added to simulation code. Tests retain captured warnings as evidence; whether the stub suite should explicitly accept this fallback needs clarification with the token-cap discrepancy.
+- Resolution: the user explicitly instructed leaving this reflection-regex behavior unchanged. No repair or warning suppression has been added to simulation code. The six-cycle N=8 stub test explicitly expects the 48 original regex warnings.
