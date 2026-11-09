@@ -174,3 +174,8 @@ subskills/results/
 .~lock.*
 
 launch*.sh
+
+# B8: raw attempts and derived datasets are handled after pilot sizing.
+runs/
+derived/
+manifest.json
