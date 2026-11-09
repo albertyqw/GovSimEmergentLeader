@@ -65,3 +65,13 @@ These observations do not authorize changes to original simulation behavior.
 - The insight-generation stop pattern contains an unmatched opening parenthesis after an escaped backslash. Pathfinder wraps and compiles that pattern; the original model wrapper catches the regex error and substitutes its empty default for the insight.
 - The actual one-cycle stub produced eight regex warnings (one per N=8 agent), while the simulation still completed. The warnings begin `An exception occured: missing ) at position 14`.
 - Resolution: the user explicitly instructed leaving this reflection-regex behavior unchanged. No repair or warning suppression has been added to simulation code. The six-cycle N=8 stub test explicitly expects the 48 original regex warnings.
+
+## B10: Recency favors earlier markdown entries
+
+- Location: `simulation/persona/cognition/retrieve.py:44-56`; original memory markdown ordering is oldest first.
+- Recency scores are `0.99 ** index` in that order, so earlier entries have higher recency scores. Retrieval remains unchanged; recording observes these exact scores.
+
+## B10: The v3 system text says both double and a sampled factor
+
+- Location: `simulation/persona/cognition/utils.py`, `get_sytem_prompt_v3`.
+- The original preamble says remaining fish double once, followed by the configured uniform-regeneration description. Preserve both statements verbatim at N=8; only specified lake numbers scale at larger N.

@@ -98,7 +98,7 @@ This verifies argument compatibility, not a complete runtime or stub run. Full r
 - Resume the launcher by skipping validated completions and restarting failed seeds in fresh attempt directories, preserving failed originals.
 - Count all project API spending toward $90, including smoke tests, retries, failed attempts and later judge calls.
 
-Remaining analysis-definition questions must be resolved before their implementation; do not treat the focused tests as the full B9 acceptance suite.
+Subsequent user answers resolved the analysis definitions; current acceptance evidence is in TEST_RESULTS.md.
 
 ## Subsequent implementation progress
 
@@ -106,5 +106,7 @@ Remaining analysis-definition questions must be resolved before their implementa
 - All six conditions complete six-cycle native stub runs. The values agenda rotates through seed-specific YAML; focal SVO and fisherman text are isolated. Coordination lake quantities scale, with N=8 system text checked byte for byte against pinned source.
 - Stakes swaps personas between cycles while retaining the same environment and eight household slots. Successors start empty and all references are rebound. Remaining-month tags and the exact household instruction appear in system-generated prompts.
 - Observational recording is implemented. Its six-cycle stakes test verifies every actual transport request is captured, 48 full memory snapshots exist, identity/household totals agree and the original parse failures are explicitly identified.
-- Process-shared budget reservations, routing and SDK error handling are under test against local doubles. No paid model calls have been made and the full B9 acceptance suite is not yet complete.
-- The user approved tie-aware adoption, deferring paid judge work until after the experiment, and explicit undefined eigenvector status. AgentElect contains no coordination random-allocation null implementation; its requested definition remains pending.
+- Process-shared budget reservations, routing and SDK error handling pass local-double tests, including billed partial 429 retries. Paid smoke testing follows the source freeze.
+- The user approved tie-aware adoption, deferring paid judge work until after the experiment, and explicit undefined eigenvector status. AgentElect contains no coordination random-allocation null implementation. The user specified a nomination-chain airtime null and conditional random-target influence null; both are implemented with recorded separate RNG keys.
+
+- The final pre-smoke suite passes 33 tests. Fixed-state request comparison matches the original replica byte for byte; all six condition diffs are stored in tests/golden. Manifest and seven-table Parquet conversion work on stored stub data. See TEST_RESULTS.md and FIDELITY.md for reproducible evidence.

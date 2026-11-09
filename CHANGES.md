@@ -28,7 +28,7 @@ Baseline: `8cf0aba9efe0b4592f395d9a66e6cfff3cec9a26`.
 | `simulation/persona/cognition/utils.py`: v3 lake quantity parameters | B4.7 | Scale capacity, catch range and worked-example lake quantities while preserving N=8 text byte for byte. |
 | `simulation/persona/cognition/leaders.py`: SVO_FISHERMAN_TASK and focal selection | B4.3 | Change only the specified opening phrase for the focal persona; preserve original SVO content elsewhere. |
 | `simulation/persona/cognition/leaders.py`: report name rendering | B4.6 | Add current tags to system-generated report labels without changing requested-catch report semantics. |
-| `simulation/persona/cognition/converse_prompts.py`: participant/nominee tags and stripping selected tags | B4.6 | Display current tags and resolve the selected nominee back to the original identity key; preserve original parsing expressions. |
+| `simulation/persona/cognition/converse_prompts.py`: participant/nominee tags and stakes-only identity resolution | B4.6 | Display current tags, then strip them before stakes-only case/unique-prefix resolution; retain the original non-stakes select path and all original regexes. |
 | `simulation/persona/cognition/store_prompts.py`: name placeholders only | B4.6 | Render system-generated perspective labels with current tags; preserve every other character and operation in these original prompts. |
 | `simulation/tenure.py` (new file) | B4.6 / B6 | Precompute identity horizons, rebind fresh personas to existing household slots and rebuild references without rebuilding the environment. |
 | `simulation/run.py`: focal SVO, scale, tenure and cycle hooks | B4.3 / B4.6 / B4.7 / B8 | Attach intervention state behind flags and invoke observational recording before/after existing phases. The original environment's allocation and regeneration generators remain unchanged. |
@@ -41,7 +41,7 @@ Baseline: `8cf0aba9efe0b4592f395d9a66e6cfff3cec9a26`.
 | `tests/test_conditions.py`, `tests/test_measurements.py`, `tests/test_recording.py`, `tests/test_budget.py`, `tests/test_openrouter_handling.py` (new files) | B9 | Verify six-condition native runs, config goals, prompt fidelity, private-call isolation, raw logging, billing reservations and local simulated API error handling. |
 | `DATA.md` (new file) | B8 | Document standardized files, units, raw-call and memory semantics, applicability of null fields and the data lifecycle. |
 
-## Approved interpretations awaiting implementation
+## Approved interpretations implemented
 
 - B6 / B9: match non-replica N=8 openers by household slot; N=16 and N=32 choose reproducibly from their full participant lists.
 - B2 / B10 / B12: preserve original wrapper internals and add required handling around them; provider-routing parameters are an explicit exception to original API-payload equality.
@@ -57,3 +57,23 @@ Baseline: `8cf0aba9efe0b4592f395d9a66e6cfff3cec9a26`.
 - B2 / B9 / B14: preserve original generation/importance caps of 8000/1000 and the original reflection-regex fallback; make tests explicitly expect both.
 - A10 / B11: proposal matching uses 0.000001-ton tolerance, splitting credit among matches; no agreed numeric limit means undefined adoption. Validate inputs for post-experiment judging/embedding without making paid judge calls during checks.
 - A10 / B11: record undefined eigenvector centrality explicitly if the directed graph has no unique result; retain degree, betweenness and airtime measures.
+
+## Remaining B8–B12 implementation hunks
+
+| File / hunk | Requirement | Purpose |
+|---|---|---|
+| `check_data.py`, `study_analysis.py` | A10 / B11 | Validate immutable inputs, calculate available measures, implement the user-defined nomination-chain and conditional-target nulls with separate recorded RNG keys, and validate deferred-analysis inputs without paid judging. Undefined directed eigenvectors are explicit. Full baseline seed 0 must pass the 97% instrument gate even on resume. |
+| `run_study.py`, `launch.sh`, `tools/launch.py`, `tools/__init__.py` | B7 / B11 / B15 | Separate stub/smoke/full modes, retain native setup seeding, enforce clean source, store Hydra config, bound concurrency, preserve failed attempts and skip validated completions. Full Flash starts only from the user's tmux command. |
+| `tools/with_tmux_key.py` | B0.4 / B1.4 / B15 | Read the user-provided key from tmux into process memory without printing or writing it. Network still requires ordinary approval. |
+| `tools/manifest.py`, `tools/build_derived.py` | B8 / B13 | Checksum raw attempts and build the seven requested Parquet tables in a separate analysis environment. Calls index omits all completion/request text, including partial retry completions. |
+| `tools/fixture_run.py`, `tools/build_fidelity.py`, `tests/golden/*`, `FIDELITY.md` | B9 / B10.9 | Reproducible pinned-reference API request comparison, all-condition diffs, payload hashes and actual rendered excerpts. Reference receives only the approved startup repair. |
+| `tests/__init__.py`, `tests/test_analysis.py`, `tests/test_config_allowlist.py`, `tests/test_mechanics.py` | B9 / A10 | Make transport fixtures importable; test analysis rules, copied-YAML allowlist, native unseeded regeneration distribution and scaled collapse thresholds. |
+| `simulation/measurement_prompts.py`: local end-of-text capture and parse observation | B4.4 / B4.5 / B8 | Capture complete new instrument answers without changing API payload parameters; attach structured parse outcome before flushing the chain. |
+| `simulation/recording.py`: start/end commit, path-derived IDs, turn links, raw SDK capture | B7 / B8 | Prevent cross-root ledger ID collisions, detect source changes during runs, preserve SDK originals and unknown token counters, and link every turn to its transport calls. |
+| `simulation/persona/cognition/converse.py`: offered nominee options and raw nominee | B8 / A10 user-defined nulls | Preserve actual options per turn for the nomination-chain null and record the raw nominated name separately from identity. |
+| `simulation/openrouter_handling.py`: response journal, partial 429 accounting, metadata recovery | B8 / B12 | Preserve raw transport evidence immediately, count billed partial retries and halt on unreconciled spending or routing/length mismatches. |
+| `tests/stub_llm.py`, `tests/test_recording.py`, `tests/test_openrouter_handling.py`: extra cases | B9 | Exercise stakes nominations with tags/bare names/case/partial names, instrument parse coverage, and partial-response retry costs. |
+| `RUNBOOK.md`, `TEST_RESULTS.md` | B11 / B15 | Record validation commands, execution division of labor, resume semantics and STOP gates. |
+| `.gitignore`: study run and derived paths | B8 | Keep write-once raw logs, budget database and derived output out of normal source commits pending the pilot storage decision. |
+
+The A10 coordination nulls keep the recorded opener and utterance count for airtime, drawing each subsequent speaker uniformly from that turn's offered nominees. Influence fixes actual speakers and eligible mention/nomination counts and redraws targets among other present agents. The full-capacity efficiency benchmark sums `capacity * (factor - 1) / factor` over realized cycles. These implement the user's explicit clarifications; AgentElect supplied neither null comparison nor this efficiency calculation.
