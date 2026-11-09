@@ -84,13 +84,13 @@ This verifies argument compatibility, not a complete runtime or stub run. Full r
 - The failure was a runtime compatibility issue that package metadata resolution did not detect. Work paused until the user authorized the compatibility resolution.
 - Installing Transformers 4.51.0 together with the original requirement sets and fixed pins resolved sentence-transformers 5.7.0, huggingface-hub 0.36.2 and tokenizers 0.21.4. No selected fixed pin changed. Importing `simulation.run` now passes.
 
-## First actual stub-run results and current stop
+## First actual stub-run results and approved original behavior
 
 - The real runner, environment, agents, memory stores, prompt builders, wrapper and Pathfinder parser execute against a canned transport stub. No OpenRouter client or external model is used.
 - A six-cycle N=8 replica stub completed, produced all 48 actual catches of 2 tons, and created native memory/log files. A strict assertion that every API request has an 8000-token cap failed: original fresh importance-rating requests use 1000.
 - A separate one-cycle neutral-cue stub test passed: the report is public, its body is unchanged, the framework is Announcer, the opener matches the dedicated slot draw, and mayor/truthfulness cues are absent from captured prompts.
 - One-cycle diagnostics: 45 requests at 8000 tokens and 32 importance-rating requests at 1000. Eight original insight-regex warnings were observed, caught by the original wrapper's fallback. Details are in `QUIRKS.md`.
-- The token-cap fidelity discrepancy requires a user decision under B0/B10 before changing the assertion or request parameters. No simulation cap or original reflection regex has been modified.
+- The user approved preserving both the original token caps and reflection-regex behavior. Tests now explicitly expect 8000-token generation, 1000-token fresh ratings and 48 original regex warnings in the six-cycle N=8 replica. No simulation cap or original reflection regex has been modified.
 
 ## Additional user decisions
 
@@ -99,3 +99,12 @@ This verifies argument compatibility, not a complete runtime or stub run. Full r
 - Count all project API spending toward $90, including smoke tests, retries, failed attempts and later judge calls.
 
 Remaining analysis-definition questions must be resolved before their implementation; do not treat the focused tests as the full B9 acceptance suite.
+
+## Subsequent implementation progress
+
+- Private pre/post discussion calls are implemented. A controlled one-cycle comparison adds exactly 16 transport calls at N=8 and leaves every MEMORY.md byte-identical; silent agents are included.
+- All six conditions complete six-cycle native stub runs. The values agenda rotates through seed-specific YAML; focal SVO and fisherman text are isolated. Coordination lake quantities scale, with N=8 system text checked byte for byte against pinned source.
+- Stakes swaps personas between cycles while retaining the same environment and eight household slots. Successors start empty and all references are rebound. Remaining-month tags and the exact household instruction appear in system-generated prompts.
+- Observational recording is implemented. Its six-cycle stakes test verifies every actual transport request is captured, 48 full memory snapshots exist, identity/household totals agree and the original parse failures are explicitly identified.
+- Process-shared budget reservations, routing and SDK error handling are under test against local doubles. No paid model calls have been made and the full B9 acceptance suite is not yet complete.
+- The user approved tie-aware adoption, deferring paid judge work until after the experiment, and explicit undefined eigenvector status. AgentElect contains no coordination random-allocation null implementation; its requested definition remains pending.
