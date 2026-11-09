@@ -36,3 +36,7 @@ The final SDK checks also cover unknown partial-response cost: halt and retain t
 Four conditions validated: replica, baseline, values and stakes. N=32 hit the unchanged 8000-token generation limit twice; the shared guard halted it and the concurrent N=16 smoke. All attempts and costs are preserved. See SMOKE_REPORT.md. Full pilot preparation is pending user review; no full Flash run has started.
 
 Public-report oversubscription is also tested: 160 tons requested against a 100-ton lake, 100 allocated, each public line matching actual allocation while requested catches remain logged. Paid paper-profile attempts preceding this completeness correction are superseded and retained.
+
+## Current paid-smoke stop
+
+On the final true-catch paper profile (314aa61), the N32 Flash-Lite smoke hit the 16000 cap once on Yusuf's harvest response (15893 reported output tokens, no Answer marker). The guard halted with no pending reservations. Earlier paper-profile replica/baseline smokes were superseded by the true-catch correction. All attempts are preserved, total spending is $0.30192999, and no full Flash run has started. See SMOKE_REPORT.md for the review decision.

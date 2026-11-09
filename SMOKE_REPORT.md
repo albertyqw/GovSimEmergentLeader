@@ -1,3 +1,31 @@
+# Current status: paper-first smoke stopped at 16,000 tokens
+
+All 40 offline tests pass, including six-cycle native stubs for every condition, current prompt isolation, exact inverse-path ties, actual public reports under oversubscription, and disabled-override request fidelity. No long Flash run has started and no `final-runs` tag has been created.
+
+After the user approved paper definitions and prompt alignment, the replica and baseline smokes on commit 7752799 completed without truncation. They are now superseded because their oversubscribed public reports still used requested catches. Actual-catch reporting was corrected and tested on commit 314aa61, leaving all old attempts intact. Those two smoke costs remain counted; replica nomination fallback was 14.3% in that superseded Flash-Lite attempt and is explicitly flagged, not silently repaired.
+
+The largest group was then tested first on the final paper-first profile, to check the earlier blocker before repeating all conditions. `runs/smoke/coord_N32/seed0_attempt2` halted during harvest:
+
+| Field | Value |
+|---|---|
+| Model | google/gemini-2.5-flash-lite |
+| Provider | Google AI Studio, fallbacks disabled |
+| Commit | 314aa61ee30262b5b8072298b49ad0bb205d3dfb |
+| Affected agent / call | Yusuf / harvest |
+| Requested max_tokens | 16000 |
+| Reported output / reasoning tokens | 15893 / 0 |
+| Finish reason | length |
+| Response size | 49037 characters; no final Answer marker |
+| Attempt cost | $0.02443260 |
+
+This was a Flash-Lite smoke, not the study's intended Gemini 2.5 Flash model. It does not establish whether the production model would also truncate. The current cap and halt remain unchanged pending user review. A possible diagnostic is a separately authorized **one-cycle** N32 Flash check at the same cap; this would not start the six-cycle long run. Raising the cap is a separate common-methods decision.
+
+Total project spending is **$0.30192999**, including all failed, interrupted and superseded attempts. Outstanding reservations are **$0.00**. Account balance and limit_remaining are **$99.69807001**, the key limit is **$100**, and reported usage is **$0.30192999**, matching the ledger. All raw data is preserved. Remaining smokes and the long pilot have not been started under this final profile.
+
+The user requested a heads-up when preparing the long run so they can commute. That notice is still due once the smoke gate is cleared; the long run is **not ready** at this stop.
+
+---
+
 # Flash-Lite smoke review
 
 All runs below use paid `google/gemini-2.5-flash-lite`, seed 0, one cycle, pinned Google AI Studio with fallbacks disabled. No full Flash pilot has started. Generation/fresh-importance caps remain 8000/1000.
