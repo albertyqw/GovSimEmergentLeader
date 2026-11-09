@@ -125,3 +125,5 @@ No original reflection regex, retrieval scores, allocation algorithm, regenerati
 - `simulation/recording.py`: record truncated flag, policy metadata and observed fallback values without changing returned parser results. `check_data.py`: accept length finishes, summarize length/parse/fallback counts. `run_study.py`: do not reuse prior-policy completions.
 - `tests/test_truncation_behavior.py` (new): exercise unchanged adapter/parser with a local SDK double across all three continuation/fallback cases and verify fixed caps, billed-call counting, no halt, raw length evidence and labeled zero defaults.
 - DATA.md / RUNBOOK.md / SETUP_AUDIT.md / QUIRKS.md / TEST_RESULTS.md / SMOKE_REPORT.md: distinguish the authorized continuing policy from historical length-stop attempts. All original raw attempts and costs remain preserved.
+
+- B8/B10/B11: SMOKE_REPORT.md / TEST_RESULTS.md / RUNBOOK.md record all six validated fixed-cap smokes, original parse/default outcomes, cumulative spending, retained historical attempts and the user-started pilot handoff. This final preparation changes documentation only; simulation source remains the validated 4fdcbb9 source.

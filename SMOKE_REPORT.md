@@ -1,3 +1,39 @@
+# Fixed-cap smoke validation complete
+
+All six one-cycle, seed-0 Flash-Lite smokes passed `check_data.py` with 1000 null replicates on commit `4fdcbb90f299a937140e7d68c2b9f30bc484745e`. Start and end commits match for every attempt. The common paper profile and `repository_parser_fixed_caps` policy were enabled. Generation/find caps stayed 16000; fresh importance caps stayed 1000. No full Gemini 2.5 Flash run has started.
+
+| Condition | Attempt | Calls | Seconds | Cost (USD) | Truncations | 429s |
+|---|---|---:|---:|---:|---:|---:|
+| replica_N8 | seed0_attempt4 | 104 | 85.5 | 0.02162450 | 0 | 0 |
+| baseline_N8 | seed0_attempt4 | 130 | 112.1 | 0.03789053 | 0 | 0 |
+| values_N8 | seed0_attempt2 | 125 | 102.2 | 0.02958089 | 0 | 0 |
+| stakes_N8 | seed0_attempt2 | 130 | 114.6 | 0.03534541 | 0 | 0 |
+| coord_N16 | seed0_attempt2 | 232 | 173.0 | 0.05303556 | 0 | 3 |
+| coord_N32 | seed0_attempt3 | 445 | 370.6 | 0.11822443 | 2 | 4 |
+
+All six lakes collapsed in cycle 1 with final stock zero. This is an observed Flash-Lite result, not a data-validation failure or a full-model result. The first-stakes full-run early-collapse gate remains applicable to the later full study; these are smoke tests.
+
+## Parsing and truncations
+
+- Harvest option parsing succeeded for every agent. Every applicable pre-discussion and perceived-leadership answer parsed successfully, including answers from silent agents. Private-call memory isolation and actual-catch public reporting passed validation.
+- Replica nomination parsing failed once in seven decisions (14.3%, above the 3% reporting flag). The original fallback selected Julia. Other conditions had zero nomination failures. No parser was repaired.
+- N32 Yusuf had two harvest requests end on length: reported output counts 15893 and 15880. The original parser made its existing next-stage request after the first partial text and parsed option 40 from the second, also partial, response. This is original integer parsing, not proof that the model produced a complete final answer. Both partial responses, fixed caps, costs and length events are retained. No added continuation prompt or length retry loop was used.
+- N16 and N32 each had one failed agreed-limit extraction and retained the original -1 fallback. Reflection evidence parsing also produced the original documented failures/defaults: 30, 32, 31, 33, 59 and 110 operations respectively in replica, baseline, values, stakes, N16 and N32. These are separate from harvest, nomination and instrument failure rates.
+- Seven 429 events were handled by the existing authorized rate-limit policy; no 402 occurred. All token counters were present in every recorded call.
+
+## Tokens, spend and next gate
+
+The six current attempts total 1166 calls and $0.29570132: 1370024 input tokens, 408468 output tokens, 52092 cached input tokens (3.80% of input), and zero reported reasoning tokens. Reported reasoning zero is provider telemetry, not a claim that responses contain no reasoning text.
+
+Cumulative project ledger spending is **$0.59763131**, including every earlier failed, interrupted and superseded attempt; pending reservations are zero. The $90 guard is active and no halt is set. Final authenticated account GET reports usage $0.59763131, balance and limit_remaining $99.40236869, and key limit $100. The initial $100 balance minus current balance matches the ledger to reported precision. All raw attempts remain preserved.
+
+All 41 offline tests passed; original disabled-override payload fidelity and amended-profile stub/storage checks are documented in TEST_RESULTS.md and FIDELITY.md. The remaining changes before the pilot are documentation only. Tag the resulting frozen commit `final-runs`; the user starts only `./launch.sh replica_N8 0` in the existing govsim tmux shell. Codex monitors and delivers the B11.2 pilot report/transcript, then **STOP**. No replica seeds 1–4 are authorized by this smoke report.
+
+The user has received the requested heads-up before the longer pilot. The Mac must stay awake and connected while it runs.
+
+---
+
+# Preserved historical reports
 # Current policy update
 
 The user approved continuing at fixed caps using repository parser behavior. Length finishes and individual parse failures are now logged rather than causing the prior study-wide stop. Original parser follow-up calls/defaults are unchanged, including explicit logging of zero fallbacks. All 41 tests pass. The historical stops below remain preserved evidence; fresh-policy smoke validation is in progress. No long Flash run has started.

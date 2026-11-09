@@ -1,6 +1,10 @@
+# Current paid-smoke validation complete
+
+All six current-policy Flash-Lite smokes passed check_data.py with 1000 null replicates on 4fdcbb9. Both private instruments parsed at 100% where applicable; harvest option failures were zero. Replica nomination parsing failed once in seven decisions (14.3%, flagged); original fallback was retained. N32 logged two length finishes and continued repository parsing at fixed caps. Cumulative project spend is $0.59763131, with zero pending reservations. See SMOKE_REPORT.md for per-attempt metrics and remaining parser warnings. No full Flash pilot has started; it will be started by the user from tmux. Earlier statuses below are historical.
+
 # Current paper-first validation
 
-- 40 tests passed with all six conditions running six native stub cycles.
+- 41 tests passed, including all six conditions running six native stub cycles and fixed-cap truncation/continuation/default logging.
 - Six additional CLI workers wrote full standardized/native logs and passed check_data.py under the amended profile (10 null replicates for this tool check). All private answers parsed, harvest/nominee failures were zero, and costs were zero because the transport was stubbed.
 - Dedicated tests cover fractional/full-capacity threshold boundaries at N8/N16/N32, keyed altruistic range through 90, preserved disabled sampling, incoming degree, inverse-distance path selection and fractional credit for exact tied paths.
 - Current private-call isolation checks retain byte-identical memory with instruments disabled/enabled. All study payloads use 16000 generation/find and 1000 fresh importance caps; requested recall is ten and recorded independently of returned count.
