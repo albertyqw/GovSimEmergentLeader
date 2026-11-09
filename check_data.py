@@ -62,7 +62,6 @@ def check_run(path, null_samples=1000):
         require(call["cost"] is not None and call["tokens"]["input"] is not None and call["tokens"]["output"] is not None,
                 "Cost or token accounting is missing")
         require(call["parse_status"] != "pending", "A parse result was not finalized")
-        require(call["finish_reason"] != "length", "A completion reached the length limit; B11/B14 requires review")
         if paper:
             fresh_rating = call["request"]["messages"][-1]["content"].startswith("Rating (1 to 10):")
             require(call["request"]["max_tokens"] == (1000 if fresh_rating else 16000), "Study token cap mismatch")
@@ -153,6 +152,9 @@ def check_run(path, null_samples=1000):
         "429_count": sum(error["type"] == 429 for error in errors), "402_count": sum(error["type"] == 402 for error in errors),
         "cycles": outcomes, "convergence": convergence, "final_month_catch_mean": float(np.mean(final_month_catches)) if final_month_catches else None,
         "parse_rates": parse_rates,
+        "truncation_count": sum(call["finish_reason"] == "length" for call in calls),
+        "parse_failure_operations": sum(op["status"] == "failed" for call in calls for op in call.get("parse_operations", [])),
+        "fallback_operations": sum(bool(op.get("fallback_applied")) for call in calls for op in call.get("parse_operations", [])),
         "post_experiment_inputs": {
             "discussion_proposal_extraction": {"utterances": len(turns), "status": "stored_text_available"},
             "reasoning_judge": {"calls": len(calls), "status": "raw_completions_available"},

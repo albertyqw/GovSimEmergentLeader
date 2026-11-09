@@ -33,6 +33,8 @@ def allocate_attempt(root, condition, seed, expected_config=None):
                     metadata = json.loads((candidate / "run_meta.json").read_text())
                     if metadata["resolved_config"] != OmegaConf.to_container(expected_config, resolve=True):
                         continue
+                    if metadata.get("truncation_policy") != "repository_parser_fixed_caps":
+                        continue
                 result = check_run(candidate, null_samples=1)
                 if result["valid"]:
                     return candidate, True

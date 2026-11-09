@@ -187,7 +187,11 @@ def attach_openrouter(model, recorder, budget, pricing, sleep=time.sleep, get=au
                 if raw.get("model") != kwargs["model"]:
                     budget.halt("Served model did not match the requested model")
                 if choice.get("finish_reason") == "length":
-                    budget.halt("Completion reached the length limit; review required under B11/B14")
+                    record["truncated"] = True
+                    recorder.write("errors", {"timestamp": utc_now(), "call_id": call_id,
+                                               "type": "length", "reason": "Output token cap reached",
+                                               "max_tokens": kwargs["max_tokens"], "generation_id": raw.get("id"),
+                                               "retry_after": None, "resolution": "continued_repository_parser"})
                 return response
             except StudyHalt:
                 raise

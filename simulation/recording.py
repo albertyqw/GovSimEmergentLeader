@@ -166,6 +166,7 @@ class RunRecorder:
                 "raw_completion": None, "reasoning_text": None, "parsed_output": {}, "parse_status": "pending",
                 "tokens": {"input": None, "output": None, "reasoning": None, "cached": None},
                 "cost": None, "latency": None, "retry_count": 0, "finish_reason": None,
+                "truncated": False,
                 "generation_id": None, "error": None, "retrieved_memories": context.get("retrieved_memories", []),
                 "retrieval_top_k": context.get("retrieval_top_k"),
             }
@@ -305,6 +306,7 @@ class RunRecorder:
             "temperature": self.config.llm.temperature, "top_p": self.config.llm.top_p,
             "max_tokens": {"generation": getattr(self.config.experiment.agent, "study_generation_max_tokens", 8000), "fresh_importance": 1000}, "thinking": "default; no budget or effort set",
             "paper_definitions": bool(getattr(self.config.experiment.agent, "paper_definitions", False)),
+            "truncation_policy": "repository_parser_fixed_caps",
             "pip_freeze": subprocess.check_output([os.sys.executable, "-m", "pip", "freeze", "--disable-pip-version-check"], text=True).splitlines(),
             "python": platform.python_version(), "os": platform.platform(), "start_time": self.started, "end_time": utc_now(),
             "status": status or ("collapsed" if getattr(self, "collapsed", False) else "completed"),
@@ -351,6 +353,7 @@ class RecordingWrapper(StudyModelWrapper):
                 record["cost"] = record.get("transport_cost", usage.get("cost"))
                 choice = (raw.get("choices") or [{}])[0]
                 record["finish_reason"] = choice.get("finish_reason")
+                record["truncated"] = choice.get("finish_reason") == "length"
                 message = choice.get("message") or {}
                 record["reasoning_text"] = message.get("reasoning") or message.get("reasoning_content")
                 record["generation_id"] = raw.get("id")
@@ -402,6 +405,14 @@ class RecordingWrapper(StudyModelWrapper):
         if budget:
             budget.check()
         result = method(*args, **kwargs)
+        record = self.recorder.buffers.get(getattr(self.recorder.local, "current", None))
+        if record is not None:
+            for operation in record.get("parse_operations", []):
+                name = operation["name"]
+                if operation["status"] == "failed" and name in getattr(result, "_variables", {}):
+                    operation["fallback_applied"] = True
+                    operation["fallback_value"] = safe(result[name])
+                    record["parsed_output"][name] = safe(result[name])
         if budget:
             budget.check()
         return result
