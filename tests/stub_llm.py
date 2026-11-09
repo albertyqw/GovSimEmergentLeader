@@ -8,12 +8,13 @@ from simulation.utils.models import ModelWandbWrapper
 
 
 class StubModel(ModelAPI):
-    def __init__(self, seed=0, turns=3, catch=2, nomination_style="tagged"):
+    def __init__(self, seed=0, turns=3, catch=2, nomination_style="tagged", multiline_memory=False):
         super().__init__("google/gemini-2.5-flash", seed)
         self.requests = []
         self.turns = turns
         self.catch = catch
         self.nomination_style = nomination_style
+        self.multiline_memory = multiline_memory
 
     def request_api(self, chat, temperature, top_p, max_tokens):
         prompt = "\n".join(message["content"] for message in chat)
@@ -51,6 +52,8 @@ class StubModel(ModelAPI):
             response = "5"
         elif "remember for your planning" in prompt:
             response = f"I should follow the {self.catch} ton agreement."
+            if self.multiline_memory:
+                response = "Planning notes:\n\n" + response
         elif "found interesting from your own perspective" in prompt:
             response = f"Julia supported {self.catch} tons per person."
         elif "What high-level insights can you infere" in prompt:

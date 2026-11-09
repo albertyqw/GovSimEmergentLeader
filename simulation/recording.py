@@ -25,6 +25,12 @@ def utc_now():
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 
+def memory_markdown_text(description):
+    """Observe the original writer/reader's blank-line normalization."""
+    written = description.strip().replace("\r\n", "\n").replace("\r", "\n")
+    return "\n".join(line for line in written.split("\n") if line).strip()
+
+
 def safe(value):
     """Ensure an environment key cannot enter errors, requests or metadata."""
     key = os.environ.get("OPENROUTER_API_KEY")
@@ -97,8 +103,15 @@ class RunRecorder:
                 candidates = [i for i, entry in enumerate(entries) if entry[0] == created and entry[1] == text]
                 index = max(candidates, key=lambda i: combined[i])
                 nodes = [node for node in persona.memory.id_to_node.values()
-                         if node.created == created and node.description.strip() == text.strip()]
-                node = next((node for node in nodes if node.importance_score == entries[index][2]), None)
+                         if node.created.replace(microsecond=0) == created
+                         and memory_markdown_text(node.description) == text.strip()
+                         and node.importance_score == entries[index][2]
+                         and bool(node.always_include) == entries[index][3]
+                         and (node.always_include or node.expiration.replace(microsecond=0) > persona.current_time)]
+                # Markdown omits node IDs. Equal entries retain append order;
+                # the retriever's stable scoring picks the corresponding one.
+                occurrence = sum(entry == entries[index] for entry in entries[:index])
+                node = nodes[occurrence] if occurrence < len(nodes) else None
                 metadata.append({
                     "id": node.id if node else None, "text": text,
                     "type": node.type.name if node else None,

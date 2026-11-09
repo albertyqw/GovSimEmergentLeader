@@ -82,7 +82,7 @@ class RecordingTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "run"
             recorder = RunRecorder(path, "stakes_N8", 0, cfg)
-            transport = StubModel()
+            transport = StubModel(multiline_memory=True)
             wrapper = RecordingWrapper(
                 transport, recorder, render=False, wanbd_logger=StubLogger(),
                 temperature=0.0, top_p=1.0, seed=0, is_api=True,
@@ -111,6 +111,7 @@ class RecordingTest(unittest.TestCase):
             memories = [m for row in calls for m in row["retrieved_memories"]]
             self.assertTrue(memories)
             self.assertTrue(all(m["id"] is not None and m["type"] for m in memories))
+            self.assertTrue(any("Planning notes:\nI should" in m["text"] for m in memories))
             checked = check_run(path, null_samples=10)
             self.assertTrue(checked["valid"])
             self.assertEqual(checked["total_catch"], 96)

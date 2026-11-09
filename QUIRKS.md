@@ -75,3 +75,9 @@ These observations do not authorize changes to original simulation behavior.
 
 - Location: `simulation/persona/cognition/utils.py`, `get_sytem_prompt_v3`.
 - The original preamble says remaining fish double once, followed by the configured uniform-regeneration description. Preserve both statements verbatim at N=8; only specified lake numbers scale at larger N.
+
+## B8 / B10: Markdown retrieval drops empty description lines
+
+- Location: `simulation/persona/memory/associative_memory.py:274-279,322-330`.
+- The original writer indents each description line; the reader omits empty lines after removing that indentation. In-memory node descriptions can therefore differ from the actual retrieved text even though they refer to the same node.
+- Preserve the original writer, reader and retrieved text. The logging observer uses that exact normalization only to recover node IDs, matching active entries and stable duplicate order. Initial replica smoke attempt exposed an observer mismatch and failed validation; its raw data is preserved and the attempt is rerun after the logging-only repair.

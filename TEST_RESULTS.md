@@ -11,3 +11,7 @@ Validation on this Mac with the isolated Python 3.11.16 environment; no paid mod
 - METHODS.md and AGENTS.md compare byte-identically with the supplied parent copies. `git diff --check` passed; no formatter, linter or auto-fixer was run.
 
 Remaining phase: one-cycle paid Flash-Lite smoke for each condition, followed by the user's tmux-started Flash pilot. Pilot completion is a STOP gate. This document does not claim a completed experiment or real-model smoke results.
+
+## Initial paid smoke finding
+
+The first replica Flash-Lite attempt reached normal termination (lake collapse in cycle 1), then failed strict data validation because the observer did not account for the original Markdown reader dropping blank lines. The shared guard stopped the concurrent baseline attempt. All missing node links in the completed replica were traced to this mismatch. No simulation logic was changed. The observer repair is covered by a multiline-memory six-cycle test; both initial attempts are retained and their approximately $0.067 cost stays in the ledger. Fresh smoke attempts follow on the repaired commit.
