@@ -298,6 +298,44 @@ def noise_floor(eff, h3, peer):
 
 
 # ---------------------------------------------------------------- figures
+def regen_sensitivity(eff):
+    """A6 run-level covariate: each arm vs baseline, unadjusted and adjusted for the run's mean realized
+    regeneration factor (OLS: outcome ~ arm + mean_regen_factor on the 10 runs of the pair). Descriptive
+    only (5 runs per arm). Also the pooled within-arm slope of each outcome on the regeneration factor."""
+    import statsmodels.formula.api as smf
+    rows = []
+    outcomes = ["welfare", "efficiency", "overusage", "equality", "survival_time"]
+    for arm in ("replica_N8", "values_N8", "stakes_N8", "coord_N16", "coord_N32"):
+        pair = eff[eff.condition.isin(["baseline_N8", arm])].copy()
+        pair["arm"] = (pair.condition == arm).astype(int)
+        for y in outcomes:
+            if y == "welfare" and arm.startswith("coord"):
+                continue  # capacity scales with N
+            if pair[y].astype(float).std() == 0:
+                continue
+            pair[y] = pair[y].astype(float)
+            raw = smf.ols(f"{y} ~ arm", pair).fit()
+            adj = smf.ols(f"{y} ~ arm + mean_regen_factor", pair).fit()
+            rows.append({"arm": arm, "outcome": y,
+                         "diff_unadjusted": raw.params["arm"], "p_unadjusted": raw.pvalues["arm"],
+                         "diff_adjusted": adj.params["arm"], "p_adjusted": adj.pvalues["arm"],
+                         "regen_slope": adj.params["mean_regen_factor"],
+                         "arm_mean_regen": pair[pair.arm == 1].mean_regen_factor.mean(),
+                         "baseline_mean_regen": pair[pair.arm == 0].mean_regen_factor.mean()})
+    df = pd.DataFrame(rows)
+    df.to_csv(RES / "regen_sensitivity.csv", index=False)
+    n8 = eff[eff.condition.str.endswith("N8")].copy()
+    slopes = {}
+    for y in ("welfare", "efficiency", "overusage", "equality"):
+        n8[y] = n8[y].astype(float)
+        fit = smf.ols(f"{y} ~ C(condition) + mean_regen_factor", n8).fit()
+        slopes[y] = {"slope_per_unit_regen": float(fit.params["mean_regen_factor"]),
+                     "p": float(fit.pvalues["mean_regen_factor"])}
+    collapsed = eff[eff.survival_time < 6][["condition", "seed", "mean_regen_factor"]].to_dict("records")
+    return df, {"within_arm_slopes_N8": slopes, "collapsed_runs_regen": collapsed,
+                "values_noncollapsed_mean_regen": float(eff[(eff.condition == "values_N8") & (eff.survival_time == 6)].mean_regen_factor.mean())}
+
+
 def figures(cent, nf):
     import matplotlib
     matplotlib.use("Agg")
@@ -356,6 +394,9 @@ def main():
     _, tests, _ = influence_by_role(cent)
     out["influence_by_role_tests"] = tests.to_dict("records")
     out["leadership_measure_agreement_mean_rho"] = agreement(runs, cent, peer, adopt_df).reset_index().to_dict("records")
+    rs, rs_extra = regen_sensitivity(eff)
+    out["regen_sensitivity"] = rs.to_dict("records")
+    out["regen_sensitivity_extra"] = rs_extra
     nf = noise_floor(eff, h3, peer)
     out["noise_floor"] = nf.to_dict("records")
     figures(cent, nf)

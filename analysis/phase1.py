@@ -357,7 +357,7 @@ def run_level_graph(r, routing="primary", exclude_focal_opened=False, phase="who
 
 
 # ---------------------------------------------------------------- H1 values
-def h1(runs, exclude_opened=False, routing="primary", use_pagerank=False):
+def h1(runs, exclude_opened=False, routing="primary", use_pagerank=False, phase="whole"):
     vals = [runs[("values_N8", s)] for s in SEEDS if ("values_N8", s) in runs]
     a_ranks, e_ranks, a_obs, e_obs, detail = [], [], [], [], []
     for r in vals:
@@ -376,7 +376,7 @@ def h1(runs, exclude_opened=False, routing="primary", use_pagerank=False):
             for n in names:
                 credit[n] += ad[n]
         rate = {n: credit[n] / defined for n in names} if defined else None
-        g = run_level_graph(r, routing, exclude_opened)
+        g = run_level_graph(r, routing, exclude_opened, phase=phase)
         if use_pagerank:
             eig, reason = M.pagerank(g), None
         else:
@@ -409,7 +409,7 @@ def h1(runs, exclude_opened=False, routing="primary", use_pagerank=False):
 
 
 # ---------------------------------------------------------------- H2 stakes
-def h2(runs, exclude_opened=False, routing="primary", measure="in_degree"):
+def h2(runs, exclude_opened=False, routing="primary", measure="in_degree", phase="whole"):
     strata, obs, detail = [], [], []
     for s in SEEDS:
         r = runs.get(("stakes_N8", s))
@@ -421,7 +421,7 @@ def h2(runs, exclude_opened=False, routing="primary", measure="in_degree"):
             if exclude_opened and ct and ct[0]["speaker_identity"] == f:
                 continue
             names = present(cy)
-            g = M.build_graph(names, ct, routing)
+            g = M.build_graph(names, M.phase_turns(ct, phase), routing)
             if measure == "in_degree":
                 v = M.in_degree(g)
             elif measure == "betweenness":
@@ -439,7 +439,7 @@ def h2(runs, exclude_opened=False, routing="primary", measure="in_degree"):
         return {"statistic": None}, pd.DataFrame(detail)
     stat = float(np.mean(obs))
     key = f"analysis|perm|H2|0" + ("" if (routing, measure, exclude_opened) == ("primary", "in_degree", False)
-                                    else f"|{routing}|{measure}|excl{int(exclude_opened)}")
+                                    else f"|{routing}|{measure}|excl{int(exclude_opened)}") + ("" if phase == "whole" else f"|{phase}")
     rng = KEYS.rng(key, H2_DRAWS * len(strata))
     sims = np.zeros(H2_DRAWS)
     for st in strata:
@@ -756,6 +756,9 @@ def main():
     sens["H2_opener_excluded"] = h2(runs, exclude_opened=True)[0]
     sens["H2_betweenness"] = h2(runs, measure="betweenness")[0]
     sens["H2_eigenvector"] = h2(runs, measure="eigenvector")[0]
+    for phase in ("opening", "nomination"):  # phase-split centrality (A5: whole-cycle and per phase)
+        sens[f"H1b_{phase}_phase"] = h1(runs, phase=phase)[0]["H1b_eigenvector"]
+        sens[f"H2_{phase}_phase"] = h2(runs, phase=phase)[0]
     for phase in ("whole", "opening"):
         sens[f"H3b_{phase}_phase"] = h3_test(h3_df, "influence_z_primary", phase, f"H3b_{phase}")[0]
     sens["H3a_whole_phase"] = h3_test(h3_df, "airtime_z", "whole", "H3a_whole")[0]

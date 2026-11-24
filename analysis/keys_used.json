@@ -9,11 +9,11 @@
  },
  {
   "key": "analysis|boot|H1a_adoption|values_N8",
-  "draws": 50000
+  "draws": 70000
  },
  {
   "key": "analysis|boot|H1b_eigenvector|values_N8",
-  "draws": 50000
+  "draws": 70000
  },
  {
   "key": "analysis|boot|H2_betweenness_primary|stakes_N8",
@@ -25,7 +25,7 @@
  },
  {
   "key": "analysis|boot|H2_in_degree_primary|stakes_N8",
-  "draws": 20000
+  "draws": 40000
  },
  {
   "key": "analysis|boot|H2_in_degree_sens_judge|stakes_N8",
@@ -5857,6 +5857,14 @@
  },
  {
   "key": "analysis|perm|H2|0",
+  "draws": 3000000
+ },
+ {
+  "key": "analysis|perm|H2|0|nomination",
+  "draws": 3000000
+ },
+ {
+  "key": "analysis|perm|H2|0|opening",
   "draws": 3000000
  },
  {

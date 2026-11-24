@@ -132,6 +132,36 @@ def match_test(df, conds, label):
     return out
 
 
+def focal_votes_by_opening(df):
+    """Values/stakes focal agent's peer-vote advantage with and without the months it opened.
+    Same statistic as phase1.peer_focal_test: per run, the focal household's percentile rank in total
+    named votes summed over the included cycles; exact enumeration over runs (8^5 assignments)."""
+    peer = pd.read_csv(RES / "peer_nominations_by_agent_cycle.csv")
+    opened = df.groupby(["condition", "seed", "cycle"]).focal_opened.first().rename("focal_opened").reset_index()
+    peer = peer.merge(opened, on=["condition", "seed", "cycle"], how="left")
+    rows = []
+    for cond in ("values_N8", "stakes_N8"):
+        for exclude in (False, True):
+            sub = peer[(peer.condition == cond) & ~(peer.focal_opened & exclude)]
+            ranks, obs = [], []
+            for s, g in sub.groupby("seed"):
+                v = g.groupby("slot").votes.sum().to_dict()
+                pr = M.percentile_ranks(v)
+                ranks.append(list(pr.values()))
+                obs.append(pr[s % 8])
+            stat = float(np.mean(obs))
+            p, n = M.exact_stratified_p(ranks, stat)
+            named = sub.votes.sum()
+            rows.append({"condition": cond, "exclude_focal_opened_cycles": exclude,
+                         "cycles": int(sub.groupby(["seed", "cycle"]).ngroups),
+                         "focal_share_of_named_votes": float(sub[sub.role == "focal"].votes.sum() / named),
+                         "focal_pct_mean": stat, "p_exact_one_sided": p, "assignments": n,
+                         "per_run_focal_pct": json.dumps([round(x, 3) for x in obs])})
+    out = pd.DataFrame(rows)
+    out.to_csv(RES / "speaking_order_focal_votes.csv", index=False)
+    return out
+
+
 def figure(df):
     import matplotlib
     matplotlib.use("Agg")
@@ -179,6 +209,7 @@ def main():
     desc = (df[df.N == 8].groupby("position")[list(MEASURES)].mean().round(4))
     desc.to_csv(RES / "speaking_order_by_position_N8.csv")
     # does the opener's private limit move the agreement? (agreed vs opener's limit, regression across cycles)
+    print(focal_votes_by_opening(df).round(4).to_string())
     figure(df)
     KEYS.dump(HERE / "keys_used.json")
     print(out.round(4).to_string())

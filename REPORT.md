@@ -97,7 +97,7 @@ The opening order is a seeded random draw, so this is a causal test within the p
 | Share of "most influential" votes | **0.59** | 0.125 | < 0.001 |
 
 - **N = 16 and 32:** first speakers get 41% of votes (chance about 4.7%), again with no gain in adoption.
-- **Values result weakens without opening months.** The values agent opened 3 of its 30 months. Excluding them, its vote share stays at 41%, but its permutation test weakens to p = 0.065. For the stakes agent it weakens to p = 0.18.
+- **Values result weakens without opening months.** The values agent opened 3 of its 30 months. Excluding them, its vote share stays at 42%, but its permutation test weakens from p = 0.0008 to p = 0.065. For the stakes agent it weakens from p = 0.043 to p = 0.21.
 - **Interpretation:** who peers name as leader tracks salience (speaking first, a prosocial plan), not influence on the decision.
 
 ![Speaking position effects](analysis/figures/speaking_position_effects_N8.png)
@@ -105,6 +105,8 @@ The opening order is a seeded random draw, so this is a causal test within the p
 ## 6. Other findings (exploratory)
 
 - **Stakes endgame.** Agents in their final month caught 1.8 t more than same-month peers (p = 0.002), and 76% of their requests exceeded the sustainability threshold. Household succession did not fully remove last-month over-harvesting.
+- **Lake regrowth.** Adjusting for each run's mean regrowth factor leaves the arm effects unchanged or slightly stronger (over-usage vs baseline: values +0.25, p = 0.010; stakes +0.24, p = 0.009). Both values collapses had below-average regrowth.
+- **Discussion phase.** The 16-month agent gets more references than chance only in the free nomination phase (percentile 0.58, p = 0.053), not in the compulsory opening round.
 - **Manipulation checks.** The values agent caught at or below the peer mean in 4 of 5 runs; so did the 16-month agent. Silence in the nomination phase rose to 70% at N = 32.
 - **Revised opening numbers.** The first proposer's number usually ends farther from the agreement than a random proposer's.
 - **Originator adoption** (proposal extractor, 18% hold-out error): no focal effect.
@@ -113,7 +115,7 @@ The opening order is a seeded random draw, so this is a causal test within the p
 
 - **Clean runs:** no harvest-parse fallbacks, two truncations (N16), no 402 errors, and 100% parsing of both private questions.
 - **Many routed hand-offs:** agents often misnamed the next speaker, so 35–47% of nomination hand-offs used the keyed random fallback (12% in baseline). Primary graphs count only nominations the agent made itself.
-- **No reasoning tokens.** Every simulation call logged zero reasoning tokens, so the runs likely had extended thinking off, although METHODS assumes default thinking.
+- **No thinking.** Gemini 2.5 Flash ran without extended thinking. Across all 41,069 calls, no call reports reasoning, and billed output tokens match the visible text ([`analysis/thinking_check.py`](analysis/thinking_check.py)). METHODS assumed default thinking, and AgentElect used it.
 - **Small samples.** Five seeds per arm; the focal slot (0–4) is confounded with seed.
 - **Ceiling on group outcomes.** Survival and equality have little room to move.
 - **Graph definitions.** The study uses the `ANALYSIS_PLAN.md` B2 graph definitions. `check_data.py`'s graph values are legacy; see [`analysis/docs/DISCREPANCIES.md`](analysis/docs/DISCREPANCIES.md).
@@ -129,6 +131,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 analysis/phase1.py
 PYTHONDONTWRITEBYTECODE=1 python3 analysis/secondary.py
 PYTHONDONTWRITEBYTECODE=1 python3 analysis/speaking_order.py
 PYTHONDONTWRITEBYTECODE=1 python3 analysis/paper_figures.py
+PYTHONDONTWRITEBYTECODE=1 python3 analysis/thinking_check.py
 ```
 
 - **Outputs:** every table is in [`analysis/results/`](analysis/results/), every figure in [`analysis/figures/`](analysis/figures/).

@@ -1,0 +1,23 @@
+{
+ "calls": 41069,
+ "request_parameters_seen": [
+  "max_tokens",
+  "model",
+  "provider",
+  "seed",
+  "temperature",
+  "top_p"
+ ],
+ "calls_with_reasoning_tokens": 0,
+ "calls_with_reasoning_text": 0,
+ "billed_output_tokens_per_visible_token_estimate": {
+  "median": 0.869,
+  "p95": 1.064,
+  "p99": 1.136,
+  "max": 1.644,
+  "n": 38906
+ },
+ "calls_with_ratio_over_2": 0,
+ "calls_where_output_cost_differs_from_tokens_x_price": 0,
+ "conclusion": "No hidden thinking: billed output tokens match the visible text and no call reports reasoning."
+}

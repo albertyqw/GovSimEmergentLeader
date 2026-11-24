@@ -129,7 +129,7 @@ P(("Speaking first wins votes, not agreement. ", True), ("The opening order is a
   "Yet the first speaker's private limit was adopted no more often than anyone else's (credit 0.10 vs. 0.10, p = 0.51), "
   "and its public proposal matched the final agreement no more often than other proposers' (0.79 vs. 0.85). This also "
   "explains part of the values result: the values agent opened 3 of its 30 months, and excluding them its vote share "
-  "stays at 41% but the permutation test weakens to p = 0.065 (stakes: p = 0.18).", False))
+  "stays at 42% but the permutation test weakens to p = 0.065 (stakes: p = 0.21).", False))
 P(("Size concentrates influence, not airtime. ", True), ("As the group grew, references and nominations piled onto a few "
   "agents far beyond what random targeting predicts (Figure 2; H3b). This held when we added nominations routed by the "
   "framework's judge or random fallback, and in both discussion phases. Speaking turns, by contrast, were more evenly "
@@ -152,7 +152,7 @@ P("Two results matter for multi-agent oversight. First, perceived leadership can
   "does not by itself make the group more sustainable.")
 H3("Limitations")
 P("Five seeds per arm gives low power for the individual-agent tests, and the focal agent's slot is confounded with the "
-  "seed. One model was tested, and its logs show no reasoning tokens, so it likely ran without extended thinking. "
+  "seed. One model was tested, and it ran without extended thinking (no call billed any reasoning tokens), unlike AgentElect. "
   "Agents often misnamed the next speaker, so 35–47% of hand-offs were routed by a random fallback; we excluded these from "
   "the main graphs. The peer-nomination question asks about influence directly, is exploratory, and is strongly shaped "
   "by speaking order. In the stakes arm, "

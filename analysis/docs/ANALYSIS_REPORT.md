@@ -34,7 +34,7 @@ RNG keys and draw counts are in `analysis/keys_used.json`. Tables are in `analys
 - No harvest fallbacks occurred, so the fallback-exclusion sensitivity analysis is identical to the main analysis.
 - No 402 errors occurred.
 - **Agents misname the next speaker very often.** 35–47% of routed handoffs used the random fallback, except in baseline (12%). That is why nominations by the judge and the random fallback are excluded from the primary graphs.
-- **No thinking in the main runs.** All simulation calls logged 0 reasoning tokens, so the Gemini 2.5 Flash runs appear to have had thinking off; METHODS A5 assumes "default dynamic thinking".
+- **No thinking in the main runs (verified).** Across all 41,069 simulation calls, no call reports reasoning tokens or reasoning text, and billed output tokens match the visible text (median 0.87 of a chars/4 estimate; maximum 1.64). The requests set no reasoning parameter. Gemini 2.5 Flash therefore ran without extended thinking, although METHODS A5 assumes "default dynamic thinking" and AgentElect reports using thinking (`analysis/thinking_check.py`, `results/thinking_check.json`).
 
 ## 2. Efficacy (`results/table1_efficacy.csv`; mean ± SE, n = 5; authors' SE in the CSV)
 
@@ -106,8 +106,16 @@ The opening order is a keyed random draw, so position effects are causal within 
 - **Speaking first does not make the group adopt your number.** The opener's private limit is adopted no more often than anyone else's. When the opener makes a public proposal, it matches the final agreement no more often than other proposers' (0.79 vs. 0.85; for N16/N32, 0.82 vs. 0.80).
 - **The originator effect is mostly timing.** Most proposals already match the eventual agreement, so whoever speaks first is usually the "earliest" to state it.
 - **Speaking first makes peers see you as the leader.** The opener gets 59% of named "most influential" votes at N = 8 (chance 12.5%) and 41% at N16/N32 (chance about 4.7%). This holds in every arm, including when cycles opened by the focal agent are excluded (56%). The last opener, who nominates the first nomination-phase speaker, gets fewer votes than chance (5%).
-- **Consequence for the values result.** The values agent opened 3 of its 30 months. Excluding those months, its vote share is still 41% (3× chance), but the per-run permutation test weakens from p = 0.0005 to p = 0.065. The stakes agent's effect falls to p = 0.18. Part of the peer-vote "leader" effect is a first-mover effect.
+- **Consequence for the values result** (`results/speaking_order_focal_votes.csv`). The values agent opened 3 of its 30 months. Excluding those months, its vote share is still 42% (3× chance), but the per-run permutation test weakens from p = 0.0008 to p = 0.065. In two of the five runs its top rank came entirely from months it opened. The stakes agent's effect falls from p = 0.043 to p = 0.21 (28% of votes). Part of the peer-vote "leader" effect is a first-mover effect.
 - This sharpens the main pattern: *who peers name as the leader* tracks salience (speaking first, a prosocial plan), while *what the group adopts* does not move with either.
+
+## 6c. Further sensitivity checks (exploratory)
+- **Lake regrowth** (`results/regen_sensitivity.csv`; plan A6). Each arm is compared with baseline, adjusting for the run's mean realized regrowth factor (OLS, 10 runs per pair). The adjustment leaves effects unchanged or slightly stronger:
+  - over-usage vs baseline: values +0.25 (p = 0.010), stakes +0.24 (p = 0.009);
+  - efficiency: values +0.17, stakes +0.18;
+  - welfare: values +42 t, stakes +49 t.
+- **Regrowth by arm.** Mean regrowth hardly differs between arms (1.90–2.01). Within arms, lower regrowth means more over-usage and lower equality. Both values collapses had below-average regrowth (1.67 and 1.94, against 2.05 for the three values runs that survived), so bad luck contributed.
+- **Phase-split centrality** (`phase1_summary.json` → `sensitivity`). H1b (values agent, eigenvector): opening only 0.54 (p = 0.44; 1 run undefined), nomination only 0.66 (p = 0.14). H2 (16-month agent, in-degree): opening only 0.48 (p = 0.65), nomination only **0.58 (p = 0.053)**. The long-tenure agent attracts somewhat more references when agents choose whom to address, not in the compulsory round. Exploratory and uncorrected.
 
 ## 7. Figures (`analysis/figures/`)
 - `speaking_position_effects_N8.png`

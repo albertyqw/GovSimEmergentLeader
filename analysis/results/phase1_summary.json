@@ -282,6 +282,54 @@
    ],
    "key": "analysis|perm|H2|0|primary|eigenvector|excl0"
   },
+  "H1b_opening_phase": {
+   "statistic": 0.5357142857142857,
+   "p": 0.439453125,
+   "assignments": 4096,
+   "runs_used": 4,
+   "effect": 0.0357142857142857,
+   "ci": [
+    0.21428571428571427,
+    0.8571428571428571
+   ],
+   "runs_undefined": 1
+  },
+  "H2_opening_phase": {
+   "statistic": 0.4809523809523809,
+   "p": 0.6457435425645743,
+   "cycles_used": 30,
+   "runs_used": 5,
+   "effect": -0.01904761904761909,
+   "ci": [
+    0.32142857142857145,
+    0.6261904761904761
+   ],
+   "key": "analysis|perm|H2|0|opening"
+  },
+  "H1b_nomination_phase": {
+   "statistic": 0.6571428571428571,
+   "p": 0.139556884765625,
+   "assignments": 32768,
+   "runs_used": 5,
+   "effect": 0.15714285714285714,
+   "ci": [
+    0.3142857142857143,
+    0.8857142857142858
+   ],
+   "runs_undefined": 0
+  },
+  "H2_nomination_phase": {
+   "statistic": 0.5761904761904763,
+   "p": 0.05322946770532295,
+   "cycles_used": 30,
+   "runs_used": 5,
+   "effect": 0.07619047619047625,
+   "ci": [
+    0.5023809523809524,
+    0.6976190476190476
+   ],
+   "key": "analysis|perm|H2|0|nomination"
+  },
   "H3b_whole_phase": {
    "statistic": 75.0,
    "p": 1.3214298928584643e-06,
